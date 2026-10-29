@@ -1,0 +1,18 @@
+.projects-page .header-inner .nav{flex-shrink:0}
+.projects-page .header-inner .nav a{white-space:nowrap}
+.projects-page .gallery-main{background:#090a0d}
+.projects-page .gallery-hero,.projects-page .gallery-subhero{background-color:#090a0d}
+.projects-page .gallery-hero{background-image:linear-gradient(90deg,rgba(7,8,11,.88),rgba(7,8,11,.34)),url("../assets/images/illustrations/lgmodulo.optimized.webp");background-position:center,74% center;background-size:cover}
+.projects-page .gallery-subhero{background-image:linear-gradient(90deg,rgba(7,8,11,.88),rgba(7,8,11,.42)),url("../assets/images/20121105_201740.jpg");background-position:center,center 48%;background-size:cover}
+.projects-page .gallery-hero:after,.projects-page .gallery-subhero:after{border-color:rgba(255,255,255,.12)}
+.projects-page .gallery-collections{background:#0a0b0e}
+.projects-page .gallery-collection-card{box-shadow:0 16px 34px rgba(0,0,0,.16)}
+.projects-page .gallery-collection-card:hover{box-shadow:0 24px 48px rgba(0,0,0,.28)}
+.projects-page .gallery-card{transition:transform .24s var(--ease),border-color .24s,box-shadow .24s}
+.projects-page .gallery-card:hover{transform:translateY(-3px);border-color:#54555c;box-shadow:0 14px 30px rgba(0,0,0,.2)}
+.projects-page .gallery-content{background:linear-gradient(#0c0d11,#090a0d)}
+.projects-page .gallery-contact-band{background:linear-gradient(100deg,#15161b,#1c191c)}
+.projects-page .header-inner .nav[aria-current="page"]{color:#e6a5a6}
+@media(max-width:900px){.projects-page .header-inner .nav{position:fixed;z-index:54;inset:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:22px;padding:84px 10vw 40px;background:#0a0b0e;opacity:0;visibility:hidden;transform:translateY(-8px);transition:opacity .2s,visibility .2s,transform .2s}.projects-page .header-inner .nav.is-open{opacity:1;visibility:visible;transform:none}.projects-page .header-inner .nav a{font:750 clamp(1.8rem,8vw,3rem)/1.1 var(--font-head);color:#f2f2f0}.projects-page .header-inner .menu-toggle{display:block;position:relative;z-index:55;background:#111217;border-color:#393a40}.projects-page .header-inner .menu-toggle span{background:#f2f2f0}}
+@media(prefers-reduced-motion:reduce){.projects-page .gallery-card,.projects-page .gallery-collection-card{transition:none}}
+@media(max-width:900px){.projects-page .header-inner .nav{width:100vw;height:100vh;height:100dvh;overflow-y:auto}}

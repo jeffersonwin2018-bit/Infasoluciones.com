@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://infasoluciones.com/sitemap.xml
