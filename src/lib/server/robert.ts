@@ -155,31 +155,55 @@ export async function streamGemini(messages: ChatMsg[], signal?: AbortSignal) {
   throw new Error(last);
 }
 
-/** Busca una canción en YouTube con Gemini + Google Search y valida que se pueda reproducir embebida. */
-export async function findSong(query: string): Promise<{ id: string; title: string; author: string } | null> {
-  const prompt = `Busca en YouTube un video que se pueda reproducir para: "${query}".
-Si es una canción o artista: el video oficial o "official audio". Si es un género/ambiente: una mezcla o playlist larga en un solo video.
-Responde SOLO con hasta 4 enlaces https://www.youtube.com/watch?v=... (uno por línea), del más adecuado al menos.`;
-  let text = '';
+
+/** Llama a Gemini (sin streaming) probando modelos; devuelve el JSON completo o null. */
+async function gen(payload: object, ms: number, tag: string) {
   for (const model of MODELS) {
-    let r: Response;
     try {
-      r = await fetch(`${API}/${model}:generateContent`, {
-      method: 'POST', signal: AbortSignal.timeout(12000),
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key() },
-      body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], tools: [{ google_search: {} }], generationConfig: { temperature: 0.2 } }),
+      const r = await fetch(`${API}/${model}:generateContent`, {
+        method: 'POST', signal: AbortSignal.timeout(ms),
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key() },
+        body: JSON.stringify(payload),
       });
-    } catch { continue; }
-    if (!r.ok) { if (RETRY.has(r.status)) continue; return null; }
-    const j = await r.json();
-    text = JSON.stringify(j); // incluye texto y metadatos de búsqueda
-    break;
-  }
-  const ids = [...new Set([...text.matchAll(/(?:v=|youtu\.be\/|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{11})/g)].map((m) => m[1]))].slice(0, 6);
-  for (const id of ids) {
-    // oEmbed responde 200 solo si el video existe y permite insertarse
-    const o = await fetch(`https://www.youtube.com/oembed?format=json&url=${encodeURIComponent('https://www.youtube.com/watch?v=' + id)}`);
-    if (o.ok) { const d = await o.json(); return { id, title: d.title, author: d.author_name }; }
+      if (r.ok) return await r.json();
+      console.warn(`[Robert:${tag}] ${model} → ${r.status}`);
+      if (!RETRY.has(r.status)) return null;
+    } catch (e: any) { console.warn(`[Robert:${tag}] ${model} → ${e?.name}`); }
   }
   return null;
+}
+
+const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9 ]/g, ' ');
+
+/**
+ * Busca una canción para reproducir con YouTube. Dos vías en paralelo:
+ *  1) Gemini + Google Search (resultados actuales)  2) memoria del modelo (rápido para canciones conocidas)
+ * Cada candidato se valida con oEmbed de YouTube (existe y se puede insertar) y se prefiere el que coincide con lo pedido.
+ */
+export async function findSong(query: string): Promise<{ id: string; title: string; author: string } | null> {
+  const ask = `Necesito videos de YouTube que se puedan reproducir para: "${query}".
+Si es una canción o artista: el video oficial, el "official audio" o un lyric video oficial. Si es un género o ambiente: una mezcla/playlist larga en un solo video.
+Responde SOLO con hasta 5 enlaces https://www.youtube.com/watch?v=ID (uno por línea), del más adecuado al menos.`;
+  const [grounded, memory] = await Promise.all([
+    gen({ contents: [{ role: 'user', parts: [{ text: ask }] }], tools: [{ google_search: {} }], generationConfig: { temperature: 0.2 } }, 15000, 'search'),
+    gen({ contents: [{ role: 'user', parts: [{ text: ask + '\nUsa tu conocimiento: solo IDs reales que recuerdes con seguridad.' }] }], generationConfig: { temperature: 0.1, maxOutputTokens: 400 } }, 8000, 'memory'),
+  ]);
+  const text = JSON.stringify([grounded, memory]);
+  const ids = [...new Set([...text.matchAll(/(?:v=|youtu\.be\/|\/embed\/|\/shorts\/|\/vi\/)([A-Za-z0-9_-]{11})/g)].map((m) => m[1]))].slice(0, 10);
+  console.info('[Robert:song]', JSON.stringify({ query, grounded: !!grounded, memory: !!memory, ids, sample: text.slice(0, 400) }));
+  const checked = await Promise.all(ids.map(async (id) => {
+    try {
+      const o = await fetch(`https://www.youtube.com/oembed?format=json&url=${encodeURIComponent('https://www.youtube.com/watch?v=' + id)}`, { signal: AbortSignal.timeout(5000) });
+      if (!o.ok) { console.warn('[Robert:oembed]', id, o.status); return null; }
+      const d = await o.json();
+      return { id, title: String(d.title), author: String(d.author_name) };
+    } catch (e: any) { console.warn('[Robert:oembed]', id, e?.name); return null; }
+  }));
+  const ok = checked.filter(Boolean) as { id: string; title: string; author: string }[];
+  if (!ok.length) return null;
+  // Preferir el que más palabras comparte con lo pedido (evita reproducir algo equivocado)
+  const words = norm(query).split(/\s+/).filter((w) => w.length > 2);
+  const score = (v: { title: string; author: string }) => { const t = norm(v.title + ' ' + v.author); return words.filter((w) => t.includes(w)).length; };
+  ok.sort((a, b) => score(b) - score(a));
+  return ok[0];
 }
