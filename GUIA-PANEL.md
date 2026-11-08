@@ -1,7 +1,7 @@
-# Guía rápida — Panel INFA (infasoluciones.com/admin)
+# Guía rápida — Panel INFA (www.infasoluciones.com/admin)
 
 ## Entrar
-1. Abre **infasoluciones.com/admin** en el celular.
+1. Abre **www.infasoluciones.com/admin** en el celular.
 2. Escribe tu usuario y contraseña.
 3. Consejo: menú del navegador → **"Agregar a pantalla de inicio"**. Así entras en un toque.
 
@@ -32,23 +32,27 @@
 
 ---
 
-# Para publicar (una sola vez — Jefferson)
-1. En Netlify → *Site configuration → Environment variables* agrega:
-   - `INFA_SETUP_CODE` = una clave secreta que solo tú sepas (para crear la primera cuenta).
-2. Publica el sitio (Netlify ejecuta `npm run build`; ya está configurado en `netlify.toml`).
-3. Entra a **/admin**, crea tu cuenta de propietario con ese código, y luego crea la de tu papá
+# Publicación (Vercel)
+- El sitio se publica solo desde GitHub (jeffersonwin2018-bit/Infasoluciones.com, rama main) en el proyecto
+  de Vercel **infasoluciones.comdev**, con el dominio **www.infasoluciones.com**.
+- Las fotos y textos del panel se guardan en **Vercel Blob privado** (store infa-panel), así que no se pierden al
+  volver a publicar el código.
+
+## Activar el panel (una sola vez — Jefferson)
+1. En Vercel → proyecto infasoluciones.comdev → *Settings → Environment Variables* agrega
+    = una clave secreta que solo tú sepas (entorno Production).
+2. *Deployments* → en el último, menú ⋯ → **Redeploy** (para que tome la variable).
+3. Entra a **www.infasoluciones.com/admin**, crea tu cuenta de propietario con esa clave, y luego crea la de tu papá
    como **Propietario** y las de los familiares como **Colaborador**.
-4. Las fotos y textos se guardan en **Netlify Blobs** (almacenamiento incluido en Netlify; revisa los límites de tu
-   plan si algún día suben miles de fotos). No se pierden al volver a publicar el código.
 
 # Para aparecer primero al buscar "INFA" en Google
 El código ya está optimizado (títulos que empiezan por INFA, datos estructurados con todas las variantes del
 nombre y las redes, sitemap con imágenes). Lo que más pesa ahora está **fuera** del código:
-1. **Google Search Console**: verifica infasoluciones.com y envía `https://infasoluciones.com/sitemap.xml`.
+1. **Google Search Console**: verifica infasoluciones.com y envía `https://www.infasoluciones.com/sitemap.xml`.
    Pega el código de verificación en `src/config/site.ts` → `googleVerification`.
 2. **Perfil de Empresa de Google (Google Maps)** con el nombre "INFA – Mueblerías y Soluciones", la misma
    dirección y teléfono de la web, fotos y el enlace a infasoluciones.com. Es lo que más ayuda en búsquedas de marca.
-3. Pon el enlace **infasoluciones.com** en la bio de Facebook, Instagram y TikTok.
+3. Pon el enlace **www.infasoluciones.com** en la bio de Facebook, Instagram y TikTok.
 4. Pide reseñas en Google a clientes reales.
 5. Completa los datos marcados `[COMPLETAR]` en `src/config/site.ts` (RUC, dirección, correo, horario).
 

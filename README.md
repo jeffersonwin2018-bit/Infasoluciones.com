@@ -1,6 +1,6 @@
 # INFA — infasoluciones.com
 
-Astro (render bajo demanda + caché CDN en Netlify) · GSAP/Lenis · panel /admin con Netlify Blobs.
+Astro (render bajo demanda + caché CDN en Vercel) · GSAP/Lenis · panel /admin con Vercel Blob privado.
 
 ```bash
 npm install
