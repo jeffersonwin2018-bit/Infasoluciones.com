@@ -17,6 +17,13 @@ export const prerender = false;
   <meta name="theme-color" content="#13294b" />
   <title>Panel INFA</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <!-- Instalable como app en el celular: abre directo el panel -->
+  <link rel="manifest" href="/admin.webmanifest" />
+  <link rel="apple-touch-icon" href="/media/brand/panel-180.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Panel INFA" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 </head>
 <body>
   <div id="app" data-accents={JSON.stringify(ACCENTS)}>

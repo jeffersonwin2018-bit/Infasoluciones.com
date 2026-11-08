@@ -27,8 +27,17 @@
 - Diseño: color principal, encender/apagar el módulo 3D que gira y cada sección de la portada.
 
 ## Usuarios (👥, solo propietario)
-- **Agregar persona**: nombre, usuario, contraseña inicial (mín. 8 caracteres) y permisos.
-- Puedes cambiar permisos, resetear claves, pausar o quitar accesos.
+- **Agregar persona**: nombre, usuario y permisos (la contraseña se sugiere sola, fácil de escribir).
+- Al tocar **Crear acceso** aparece el mensaje listo: toca **Enviar por WhatsApp** y elige a la persona.
+  El mensaje lleva el enlace, su usuario, su contraseña y cómo poner el panel como app en el celular.
+- **Clave** resetea la contraseña de alguien y vuelve a mostrar el mensaje para reenviarlo.
+- Puedes cambiar permisos, pausar o quitar accesos.
+
+## En el celular de cada persona
+- Abre el enlace del mensaje, entra con su usuario y contraseña (queda conectado 30 días).
+- Android: ⋮ → "Agregar a pantalla principal" / "Instalar app". iPhone: Compartir ⬆️ → "Agregar a inicio".
+  Aparece el ícono **Panel INFA** y abre directo el panel.
+- Mientras esté conectado, al ver la web le sale un botón **✏️ Editar web** abajo a la izquierda que lo lleva al panel.
 
 ---
 

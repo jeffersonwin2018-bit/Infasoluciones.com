@@ -1,0 +1,17 @@
+{
+  "name": "Panel INFA",
+  "short_name": "Panel INFA",
+  "description": "Sube fotos de trabajos y edita la web de INFA.",
+  "lang": "es-PE",
+  "id": "/admin",
+  "start_url": "/admin",
+  "scope": "/admin",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#13294b",
+  "theme_color": "#13294b",
+  "icons": [
+    { "src": "/media/brand/panel-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/media/brand/panel-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

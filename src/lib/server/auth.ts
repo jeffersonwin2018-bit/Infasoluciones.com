@@ -100,6 +100,9 @@ export async function sessionCookie(u: User, secure: boolean) {
   return `${COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${SESSION_DAYS * 86400}${secure ? '; Secure' : ''}`;
 }
 export const clearCookie = (secure: boolean) => `${COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure ? '; Secure' : ''}`;
+/** Marca visible para JS (sin datos): solo sirve para mostrar el botón "Editar web" en el sitio. */
+export const flagCookie = (on: boolean, secure: boolean) =>
+  `infa_team=${on ? '1' : ''}; Path=/; SameSite=Lax; Max-Age=${on ? SESSION_DAYS * 86400 : 0}${secure ? '; Secure' : ''}`;
 
 export async function currentUser(request: Request): Promise<User | null> {
   const raw = request.headers.get('cookie') ?? '';

@@ -4,7 +4,7 @@
  */
 import type { APIRoute } from 'astro';
 import {
-  ROLES, can, checkLock, clearCookie, currentUser, hashPassword, listUsers, newId, normalizeUsername,
+  ROLES, can, checkLock, clearCookie, currentUser, flagCookie, hashPassword, listUsers, newId, normalizeUsername,
   publicUser, registerAttempt, saveUsers, sessionCookie, validatePassword, verifyPassword, type Role, type User,
 } from '@/lib/server/auth';
 import { getSettings, getWorks, saveSettings, saveWorks } from '@/lib/server/content';
@@ -13,8 +13,11 @@ import { WORK_CATEGORIES, type Work, type WorkCategory } from '@/data/works';
 
 export const prerender = false;
 
-const json = (data: unknown, status = 200, headers: Record<string, string> = {}) =>
-  new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...headers } });
+const json = (data: unknown, status = 200, extra: Record<string, string> = {}, cookies: string[] = []) => {
+  const h = new Headers({ 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...extra });
+  cookies.forEach((c) => h.append('Set-Cookie', c));
+  return new Response(JSON.stringify(data), { status, headers: h });
+};
 const err = (message: string, status = 400) => json({ error: message }, status);
 
 const isSecure = (req: Request) => new URL(req.url).protocol === 'https:';
@@ -66,7 +69,7 @@ export const ALL: APIRoute = async ({ request, params }) => {
     if (username.length < 3) return err('El usuario debe tener al menos 3 caracteres.');
     const u: User = { id: newId(), username, name: str(b.name, 60) || username, role: 'propietario', active: true, createdAt: new Date().toISOString(), ...(await hashPassword(b.password)) };
     await saveUsers([u]);
-    return json({ user: publicUser(u) }, 201, { 'Set-Cookie': await sessionCookie(u, isSecure(request)) });
+    return json({ user: publicUser(u) }, 201, {}, [await sessionCookie(u, isSecure(request)), flagCookie(true, isSecure(request))]);
   }
 
   if (res === 'login' && method === 'POST') {
@@ -80,10 +83,10 @@ export const ALL: APIRoute = async ({ request, params }) => {
     if (!ok || !u) return err('Usuario o contraseña incorrectos.', 401);
     u.lastLogin = new Date().toISOString();
     await saveUsers(users);
-    return json({ user: publicUser(u) }, 200, { 'Set-Cookie': await sessionCookie(u, isSecure(request)) });
+    return json({ user: publicUser(u) }, 200, {}, [await sessionCookie(u, isSecure(request)), flagCookie(true, isSecure(request))]);
   }
 
-  if (res === 'logout' && method === 'POST') return json({ ok: true }, 200, { 'Set-Cookie': clearCookie(isSecure(request)) });
+  if (res === 'logout' && method === 'POST') return json({ ok: true }, 200, {}, [clearCookie(isSecure(request)), flagCookie(false, isSecure(request))]);
 
   // ── A partir de aquí: requiere sesión ───────────────────────────
   if (!me) return err('Inicia sesión.', 401);
@@ -95,7 +98,7 @@ export const ALL: APIRoute = async ({ request, params }) => {
     if (pwErr) return err(pwErr);
     Object.assign(me, await hashPassword(b.next));
     await saveUsers(users);
-    return json({ ok: true }, 200, { 'Set-Cookie': await sessionCookie(me, isSecure(request)) });
+    return json({ ok: true }, 200, {}, [await sessionCookie(me, isSecure(request))]);
   }
 
   // ── Textos y diseño ─────────────────────────────────────────────

@@ -52,7 +52,7 @@ function renderAuth(setup: boolean) {
   app.innerHTML = `
   <div class="auth"><form class="auth__card" novalidate>
     <div class="auth__logo">${logo}<div><h1>${setup ? 'Configurar panel' : 'Panel INFA'}</h1></div></div>
-    <p>${setup ? 'Crea la primera cuenta de <b>propietario</b>. Luego podrás invitar a tu familia y equipo.' : 'Ingresa para subir fotos y editar la página.'}</p>
+    <p>${setup ? 'Crea la primera cuenta de <b>propietario</b>. Luego podrás invitar a tu familia y equipo.' : 'Ingresa para subir fotos y editar la página. Entras una vez y quedas conectado 30 días.'}</p>
     <div class="err" hidden></div>
     ${setup ? `<label class="f"><span>Tu nombre</span><input type="text" name="name" autocomplete="name" placeholder="Ej.: Jefferson" required></label>` : ''}
     <label class="f"><span>Usuario</span><input type="text" name="username" autocomplete="username" autocapitalize="none" placeholder="ej.: papa" required></label>
@@ -96,8 +96,13 @@ function renderShell() {
     <button type="button" data-logout>Salir</button>
   </header>
   <nav class="tabs" role="tablist">${TABS().map((t) => `<button type="button" role="tab" data-tab="${t.id}" aria-selected="${t.id === tab}">${t.label}</button>`).join('')}</nav>
+  ${installBanner()}
   <main id="view"></main>`;
-  $('[data-logout]').addEventListener('click', async () => { await api('logout', { method: 'POST' }); location.reload(); });
+  bindInstall();
+  $('[data-logout]').addEventListener('click', async () => {
+    if (!confirm('¿Cerrar sesión? Tendrás que volver a escribir tu usuario y contraseña.')) return;
+    await api('logout', { method: 'POST' }); location.reload();
+  });
   $$('[data-tab]').forEach((b) => b.addEventListener('click', () => go(b.dataset.tab!)));
   go(tab);
 }
@@ -454,9 +459,10 @@ async function viewUsuarios(v: HTMLElement) {
       catch (x: any) { toast(x.message, true); viewUsuarios(v); }
     });
     $('[data-pw]', row).addEventListener('click', async () => {
-      const pw = prompt('Nueva contraseña para esta persona (mínimo 8 caracteres):');
+      const u = users.find((x) => x.id === id)!;
+      const pw = prompt(`Nueva contraseña para ${u.name} (mínimo 8 caracteres):`, suggestPassword());
       if (!pw) return;
-      try { await api(`users/${id}`, { method: 'PATCH', json: { password: pw } }); toast('✓ Contraseña cambiada'); } catch (x: any) { toast(x.message, true); }
+      try { await api(`users/${id}`, { method: 'PATCH', json: { password: pw } }); shareAccess(u.name, u.username, pw, u.role, true); } catch (x: any) { toast(x.message, true); }
     });
     $('[data-act]', row).addEventListener('click', async () => {
       const u = users.find((x) => x.id === id)!;
@@ -469,8 +475,83 @@ async function viewUsuarios(v: HTMLElement) {
   });
   $('[data-new]', v).addEventListener('submit', async (e) => {
     e.preventDefault();
-    try { await api('users', { method: 'POST', json: Object.fromEntries(new FormData(e.target as HTMLFormElement)) }); toast('✓ Acceso creado'); viewUsuarios(v); }
-    catch (x: any) { toast(x.message, true); }
+    const data = Object.fromEntries(new FormData(e.target as HTMLFormElement)) as Record<string, string>;
+    try {
+      const u = await api<User>('users', { method: 'POST', json: data });
+      viewUsuarios(v);
+      shareAccess(u.name, u.username, data.password, u.role, false);
+    } catch (x: any) { toast(x.message, true); }
+  });
+  const pwIn = $<HTMLInputElement>('[data-new] input[name=password]', v);
+  if (!pwIn.value) pwIn.value = suggestPassword();
+}
+
+/** Contraseña fácil de dictar/escribir en el celular: palabra + 4 números (ej.: "madera4821"). */
+function suggestPassword() {
+  const words = ['madera', 'taller', 'modulo', 'acero', 'cedro', 'roble', 'lacado', 'repisa', 'vitrina', 'mueble'];
+  const n = crypto.getRandomValues(new Uint32Array(2));
+  return words[n[0] % words.length] + String(1000 + (n[1] % 9000));
+}
+
+/** Tras crear o resetear un acceso: mensaje listo para mandar por WhatsApp (el propietario elige el contacto). */
+function shareAccess(name: string, username: string, password: string, role: Role, reset: boolean) {
+  const url = `${location.origin}/admin`;
+  const first = name.split(' ')[0];
+  const que = role === 'colaborador'
+    ? 'subir fotos de los trabajos (con su fecha) para que la web se vea siempre al día'
+    : 'subir fotos, elegir qué trabajos salen en la portada y cambiar los textos de la web';
+  const msg = [
+    `Hola ${first} 👋`,
+    reset ? 'Te cambié la contraseña del panel de la web de INFA.' : `Ya tienes acceso al panel de la web de INFA. Desde ahí puedes ${que}.`,
+    '',
+    `1️⃣ Entra aquí: ${url}`,
+    `2️⃣ Usuario: ${username}`,
+    `3️⃣ Contraseña: ${password}`,
+    '',
+    '📲 Para tenerlo como app en tu celular:',
+    '• Android (Chrome): toca ⋮ → "Agregar a pantalla principal" o "Instalar app".',
+    '• iPhone (Safari): toca Compartir ⬆️ → "Agregar a inicio".',
+    '',
+    'Tu sesión queda abierta 30 días. Puedes cambiar tu contraseña en "🔒 Mi cuenta".',
+  ].join('\n');
+  const m = modal(`<h3>✓ ${reset ? 'Contraseña cambiada' : 'Acceso creado'} para ${esc(name)}</h3>
+    <p class="sub">Envíale este mensaje. Al tocar el botón se abre WhatsApp y eliges a quién mandarlo.</p>
+    <pre style="white-space:pre-wrap;background:#f6f7f9;border-radius:12px;padding:12px;font:inherit;font-size:.88rem;margin:0 0 14px">${esc(msg)}</pre>
+    <div style="display:grid;gap:10px">
+      <a class="b b--ok b--block" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">Enviar por WhatsApp</a>
+      <button class="b b--ghost b--block" type="button" data-copy>Copiar mensaje</button>
+      ${navigator.share ? '<button class="b b--ghost b--block" type="button" data-share>Compartir por otra app</button>' : ''}
+      <button class="b b--ghost b--block" type="button" data-close>Listo</button>
+    </div>`);
+  $('[data-close]', m).addEventListener('click', () => m.remove());
+  $('[data-copy]', m).addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(msg); toast('✓ Mensaje copiado'); } catch { toast('No se pudo copiar; selecciónalo a mano', true); }
+  });
+  m.querySelector('[data-share]')?.addEventListener('click', () => navigator.share({ text: msg }).catch(() => {}));
+}
+
+// ── Instalar el panel como app en el celular ───────────────
+let installEvt: any = null;
+addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvt = e; $('[data-install-go]')?.removeAttribute('hidden'); });
+function installBanner() {
+  const standalone = matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
+  let dismissed = false;
+  try { dismissed = localStorage.getItem('infa-install-hide') === '1'; } catch {}
+  if (standalone || dismissed || !matchMedia('(max-width: 900px)').matches) return '';
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  return `<div class="help" data-install style="display:flex;gap:10px;align-items:flex-start;margin:12px 16px 0">
+    <div style="flex:1">📲 <b>Ten el panel como app.</b> ${ios ? 'En Safari toca Compartir ⬆️ → "Agregar a inicio".' : 'Toca ⋮ del navegador → "Agregar a pantalla principal".'}
+      <div><button class="b b--sm" type="button" data-install-go ${installEvt ? '' : 'hidden'} style="margin-top:8px">Instalar ahora</button></div></div>
+    <button type="button" data-install-x aria-label="Ocultar" style="border:0;background:none;font-size:20px;cursor:pointer">×</button></div>`;
+}
+function bindInstall() {
+  $('[data-install-x]')?.addEventListener('click', () => { try { localStorage.setItem('infa-install-hide', '1'); } catch {} $('[data-install]')?.remove(); });
+  $('[data-install-go]')?.addEventListener('click', async () => {
+    if (!installEvt) return;
+    installEvt.prompt();
+    const r = await installEvt.userChoice.catch(() => null);
+    if (r?.outcome === 'accepted') $('[data-install]')?.remove();
+    installEvt = null;
   });
 }
 
@@ -482,7 +563,10 @@ function viewCuenta(v: HTMLElement) {
       <label class="f"><span>Nueva contraseña</span><input type="password" name="next" autocomplete="new-password" minlength="8" required><small>Mínimo 8 caracteres.</small></label>
       <button class="b b--red" type="submit">Cambiar contraseña</button>
     </form></section>
-    <section class="card"><h2>Consejo</h2><p class="sub">Guarda esta página en la pantalla de inicio del celular (menú del navegador → "Agregar a pantalla de inicio") para entrar en un toque.</p></section>`;
+    <section class="card"><h2>📲 Tener el panel como app</h2>
+      <p class="sub"><b>Android (Chrome):</b> toca ⋮ arriba a la derecha → "Agregar a pantalla principal" o "Instalar app".<br>
+      <b>iPhone (Safari):</b> toca Compartir ⬆️ abajo → "Agregar a inicio".<br>
+      Aparecerá el ícono <b>Panel INFA</b>. Tu sesión queda abierta 30 días, así que no tendrás que escribir la contraseña cada vez.</p></section>`;
   $('[data-pw]', v).addEventListener('submit', async (e) => {
     e.preventDefault();
     const f = e.target as HTMLFormElement;
@@ -494,7 +578,9 @@ function viewCuenta(v: HTMLElement) {
 // ── Arranque ───────────────────────────────────────────────
 async function boot() {
   S = await api<Session>('session');
-  if (!S.user) return renderAuth(S.setupNeeded);
+  const flag = (on: boolean) => { document.cookie = `infa_team=${on ? '1' : ''}; Path=/; SameSite=Lax; Max-Age=${on ? 2592000 : 0}${location.protocol === 'https:' ? '; Secure' : ''}`; };
+  if (!S.user) { flag(false); return renderAuth(S.setupNeeded); }
+  flag(true);
   me = S.user;
   renderShell();
 }
