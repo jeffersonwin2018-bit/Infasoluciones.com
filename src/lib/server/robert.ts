@@ -12,8 +12,12 @@ import { getSettings, publicWorks } from './content';
 
 const API = 'https://generativelanguage.googleapis.com/v1beta/models';
 // Si un modelo está saturado (503/429/500) o no existe, se prueba el siguiente automáticamente.
-const MODELS = [...new Set([process.env.GEMINI_MODEL, 'gemini-flash-latest', 'gemini-2.5-flash', 'gemini-flash-lite-latest', 'gemini-2.5-flash-lite'].filter(Boolean) as string[])];
+const MODELS = [...new Set([process.env.GEMINI_MODEL, 'gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash-lite', 'gemini-flash-lite-latest'].filter(Boolean) as string[])];
 const RETRY = new Set([400, 404, 408, 429, 500, 502, 503, 504]);
+// Modelos que fallaron hace poco se saltan 5 minutos (no perder segundos en uno saturado)
+const cooldown = new Map<string, number>();
+const models = () => { const now = Date.now(); const ok = MODELS.filter((m) => (cooldown.get(m) ?? 0) < now); return ok.length ? ok : MODELS; };
+const markBad = (m: string) => cooldown.set(m, Date.now() + 5 * 60e3);
 const key = () => process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
 export const robertReady = () => !!key();
 
@@ -132,7 +136,7 @@ export async function streamGemini(messages: ChatMsg[], signal?: AbortSignal) {
     generationConfig: { temperature: 0.6, maxOutputTokens: 700 },
   });
   let last = '';
-  for (const model of MODELS) {
+  for (const model of models()) {
     // Si el modelo no empieza a responder en 8 s, se corta y se prueba el siguiente.
     // (El límite solo cubre la espera inicial; la respuesta en streaming puede durar lo que necesite.)
     const ctrl = new AbortController();
@@ -145,11 +149,12 @@ export async function streamGemini(messages: ChatMsg[], signal?: AbortSignal) {
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key() },
         body,
       });
-    } catch (e: any) { clearTimeout(timer); last = `${model}: ${e?.name ?? e}`; if (signal?.aborted) break; continue; }
+    } catch (e: any) { clearTimeout(timer); last = `${model}: ${e?.name ?? e}`; if (signal?.aborted) break; markBad(model); continue; }
     clearTimeout(timer);
     if (r.ok && r.body) return r.body;
     last = `${model}: ${r.status} ${(await r.text()).slice(0, 300)}`;
     console.warn('[Robert] modelo falló, probando el siguiente →', last.slice(0, 120));
+    if (r.status === 429 || r.status >= 500) markBad(model);
     if (!RETRY.has(r.status)) break; // 401/403: clave inválida, no sirve probar otro
   }
   throw new Error(last);
@@ -158,7 +163,7 @@ export async function streamGemini(messages: ChatMsg[], signal?: AbortSignal) {
 
 /** Llama a Gemini (sin streaming) probando modelos; devuelve el JSON completo o null. */
 async function gen(payload: object, ms: number, tag: string) {
-  for (const model of MODELS) {
+  for (const model of models()) {
     try {
       const r = await fetch(`${API}/${model}:generateContent`, {
         method: 'POST', signal: AbortSignal.timeout(ms),
@@ -167,8 +172,9 @@ async function gen(payload: object, ms: number, tag: string) {
       });
       if (r.ok) return await r.json();
       console.warn(`[Robert:${tag}] ${model} → ${r.status}`);
+      if (r.status === 429 || r.status >= 500) markBad(model);
       if (!RETRY.has(r.status)) return null;
-    } catch (e: any) { console.warn(`[Robert:${tag}] ${model} → ${e?.name}`); }
+    } catch (e: any) { console.warn(`[Robert:${tag}] ${model} → ${e?.name}`); markBad(model); }
   }
   return null;
 }
@@ -190,7 +196,7 @@ Responde SOLO con hasta 5 enlaces https://www.youtube.com/watch?v=ID (uno por l�
   ]);
   const text = JSON.stringify([grounded, memory]);
   const ids = [...new Set([...text.matchAll(/(?:v=|youtu\.be\/|\/embed\/|\/shorts\/|\/vi\/)([A-Za-z0-9_-]{11})/g)].map((m) => m[1]))].slice(0, 10);
-  console.info('[Robert:song]', JSON.stringify({ query, grounded: !!grounded, memory: !!memory, ids, sample: text.slice(0, 400) }));
+  console.info('[Robert:song]', JSON.stringify({ query, grounded: !!grounded, memory: !!memory, ids }));
   const checked = await Promise.all(ids.map(async (id) => {
     try {
       const o = await fetch(`https://www.youtube.com/oembed?format=json&url=${encodeURIComponent('https://www.youtube.com/watch?v=' + id)}`, { signal: AbortSignal.timeout(5000) });
