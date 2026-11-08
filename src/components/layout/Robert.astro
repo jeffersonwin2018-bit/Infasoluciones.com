@@ -118,7 +118,7 @@ const avatar = `<svg viewBox="0 0 48 48" aria-hidden="true"><rect width="48" hei
   .np__art { position: relative; width: 44px; height: 44px; border-radius: 10px; overflow: hidden; background: var(--c-weld); display: grid; place-items: center; }
   .np__art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .np.is-yt .np__art { display: none; }
-  .np.is-yt { grid-template-columns: minmax(0, 1fr) repeat(4, 34px); }
+  .np.is-yt { grid-template-columns: minmax(0, 1fr) repeat(4, 34px); width: min(300px, calc(100vw - 28px)); }
   .np__eq { display: flex; align-items: end; gap: 2px; height: 16px; position: relative; }
   .np__eq b { width: 3px; height: 4px; background: #fff; border-radius: 2px; }
   .np.is-playing .np__eq b { animation: eq 1s ease-in-out infinite; }
