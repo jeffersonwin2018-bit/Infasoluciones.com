@@ -65,6 +65,9 @@ function close() {
   (window as any).__lenis?.start();
 }
 
+// En celular el chat ocupa toda la pantalla: al poner música se cierra para ver el reproductor
+const closeOnMobile = () => { if (matchMedia('(max-width: 860px)').matches) setTimeout(close, 1400); };
+
 const go = (href: string) => {
   if (location.pathname === href) { close(); scrollTo({ top: 0, behavior: 'smooth' }); return; }
   setTimeout(() => (location.href = href), 700);
@@ -72,8 +75,8 @@ const go = (href: string) => {
 
 function act(name: string, args: any) {
   switch (name) {
-    case 'play_ambient': playAmbient(); break;
-    case 'play_youtube': playYouTube(args); break;
+    case 'play_ambient': playAmbient(); closeOnMobile(); break;
+    case 'play_youtube': playYouTube(args); closeOnMobile(); break;
     case 'control_music': {
       const a = args.action;
       if (a === 'pausar') pause(); else if (a === 'reanudar') resume(); else if (a === 'siguiente') next();

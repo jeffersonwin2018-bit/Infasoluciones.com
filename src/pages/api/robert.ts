@@ -6,7 +6,8 @@
  *   {t:'done'} | {t:'error', d}
  */
 import type { APIRoute } from 'astro';
-import { findSong, robertReady, streamGemini, NAV_TARGETS, type ChatMsg } from '@/lib/server/robert';
+import { robertReady, streamGemini, NAV_TARGETS, type ChatMsg } from '@/lib/server/robert';
+import { findSong, offlineAnswer, shortcut } from '@/lib/server/robert-tools';
 
 export const prerender = false;
 
@@ -24,7 +25,6 @@ function limited(ip: string) {
 export const POST: APIRoute = async ({ request, clientAddress }) => {
   const origin = request.headers.get('origin');
   if (origin && new URL(origin).host !== new URL(request.url).host) return new Response('Origen no permitido', { status: 403 });
-  if (!robertReady()) return Response.json({ error: 'Robert aún no está configurado (falta GEMINI_API_KEY).' }, { status: 503 });
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || clientAddress || 'x';
   if (limited(ip)) return Response.json({ error: 'Has enviado muchos mensajes seguidos. Espera unos minutos 🙏' }, { status: 429 });
 
@@ -45,7 +45,27 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
       const send = (o: object) => ctrl.enqueue(enc.encode(JSON.stringify(o) + '\n'));
       let wrote = false;
       const calls: { name: string; args: any }[] = [];
+      const last = messages.at(-1)!.text;
+      const playSong = async (q: string) => {
+        send({ t: 'status', d: `Buscando "${q}"…` });
+        const song = await findSong(q);
+        const sep = wrote ? '\n\n' : '';
+        if (song) { send({ t: 'action', name: 'play_youtube', args: song }); send({ t: 'text', d: `${sep}🎵 Sonando: **${song.title}**` }); }
+        else send({ t: 'text', d: `${sep}No encontré "${q}" para reproducir aquí 😕. ¿Probamos con otra canción o artista?` });
+        wrote = true;
+      };
+
+      // 1) Atajos instantáneos sin IA: "pon X", "pausa", "siguiente"…
+      const sc = shortcut(last);
+      if (sc) {
+        if (sc.text) { wrote = true; send({ t: 'text', d: sc.text }); }
+        if (sc.action) send({ t: 'action', ...sc.action });
+        if (sc.song) await playSong(sc.song);
+        send({ t: 'done' }); ctrl.close(); return;
+      }
+
       try {
+        if (!robertReady()) throw new Error('sin clave');
         const body = await streamGemini(messages, request.signal);
         const reader = body.pipeThrough(new TextDecoderStream()).getReader();
         let buf = '';
@@ -72,14 +92,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
           if (c.name === 'play_music') {
             const q = String(c.args.query ?? '').slice(0, 120);
             if (!q || /ambiente\s*infa/i.test(q)) { send({ t: 'action', name: 'play_ambient', args: {} }); if (!wrote) send({ t: 'text', d: '🎵 Listo, puse la música ambiental de INFA.' }); continue; }
-            send({ t: 'status', d: `Buscando "${q}"…` });
-            const song = await findSong(q);
-            if (song) {
-              send({ t: 'action', name: 'play_youtube', args: song });
-              if (!wrote) send({ t: 'text', d: `🎵 Sonando: **${song.title}**` });
-            } else {
-              send({ t: 'text', d: `${wrote ? '\n\n' : ''}No encontré "${q}" para reproducir aquí 😕. ¿Probamos con otra canción o artista?` });
-            }
+            await playSong(q);
           } else if (c.name === 'navigate') {
             const t = NAV_TARGETS[String(c.args.target)];
             if (t) { send({ t: 'action', name: 'navigate', args: { href: t.href } }); if (!wrote) send({ t: 'text', d: `Te llevo a **${t.label}** 👉` }); }
@@ -97,9 +110,14 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
         if (!wrote && !calls.length) send({ t: 'text', d: '¿Me lo repites de otra forma? 🙂' });
         send({ t: 'done' });
       } catch (e: any) {
-        console.error('[Robert]', e?.message ?? e);
-        const msg = String(e?.message ?? '');
-        send({ t: 'error', d: /429/.test(msg) ? 'Estoy recibiendo muchas consultas ahora mismo. Intenta en un minuto 🙏' : 'Tuve un problema para responder. Puedes escribirnos directo por WhatsApp.' });
+        console.error('[Robert] Gemini no disponible → respuesta de respaldo:', String(e?.message ?? e).slice(0, 160));
+        // 2) Respaldo sin IA: Robert igual responde algo útil
+        if (!wrote) {
+          const fb = offlineAnswer(last);
+          send({ t: 'text', d: fb.text });
+          if (fb.action) send({ t: 'action', ...fb.action });
+        }
+        send({ t: 'done' });
       }
       ctrl.close();
     },

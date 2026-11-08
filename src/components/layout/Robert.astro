@@ -6,7 +6,7 @@
  */
 import { waLink } from '@/lib/whatsapp';
 import Icon from '@/components/ui/Icon.astro';
-const avatar = `<svg viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="14" fill="#13294b"/><path d="M14 33V15h11a6 6 0 0 1 0 12h-4l9 6" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="35" cy="14" r="4" fill="var(--c-weld,#e8293a)"/></svg>`;
+const avatar = '<img src="/media/brand/robert-192.webp" srcset="/media/brand/robert-96.webp 96w, /media/brand/robert-192.webp 192w, /media/brand/robert-384.webp 384w" sizes="64px" width="64" height="64" alt="" decoding="async">';
 ---
 <button class="rb-launch" type="button" data-robert-open aria-label="Hablar con Robert, el asistente de INFA">
   <span class="rb-launch__av" set:html={avatar} />
@@ -66,7 +66,7 @@ const avatar = `<svg viewBox="0 0 48 48" aria-hidden="true"><rect width="48" hei
   .rb-launch.is-compact .rb-launch__txt { display: none; }
   .rb-launch.is-compact:hover .rb-launch__txt { display: grid; }
   .rb-launch.is-compact:hover { padding-right: 18px; }
-  .rb-launch__av svg, .rb__av svg, .dock__robert svg { display: block; width: 100%; height: 100%; }
+  .rb-launch__av img, .rb__av img, .dock__robert img { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
   .rb-launch__av { width: 44px; height: 44px; }
   .rb-launch__txt { display: grid; text-align: left; font: 750 .95rem/1.1 var(--f-display); }
   .rb-launch__txt small { font: 500 .62rem/1.2 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: #9fb4d9; }
@@ -149,7 +149,7 @@ const avatar = `<svg viewBox="0 0 48 48" aria-hidden="true"><rect width="48" hei
     .dock__i[aria-pressed='true'] { color: #fff; background: rgb(255 255 255 / .08); }
     .dock__i[aria-pressed='true'] svg { stroke: var(--c-weld); }
     .dock__robert { display: grid; justify-items: center; gap: 3px; margin-top: -26px; border: 0; background: none; color: #fff; cursor: pointer; font: 700 .66rem/1 var(--f-body); }
-    .dock__robert span { width: 58px; height: 58px; border-radius: 18px; padding: 3px; background: linear-gradient(140deg, var(--c-weld), #13294b); box-shadow: 0 10px 26px rgb(232 41 58 / .45); }
+    .dock__robert span { width: 60px; height: 60px; border-radius: 50%; padding: 2px; background: linear-gradient(140deg, var(--c-weld), #13294b); box-shadow: 0 10px 26px rgb(232 41 58 / .45); }
     .dock__robert em { font-style: normal; }
     body { padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
     .np { bottom: calc(max(10px, env(safe-area-inset-bottom)) + 84px); left: 10px; width: calc(100vw - 20px); }
