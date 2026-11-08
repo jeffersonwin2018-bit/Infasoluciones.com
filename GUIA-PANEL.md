@@ -54,6 +54,14 @@
 3. Entra a **www.infasoluciones.com/admin**, crea tu cuenta de propietario con esa clave, y luego crea la de tu papá
    como **Propietario** y las de los familiares como **Colaborador**.
 
+## Robert (asistente IA con Gemini)
+1. Vercel → infasoluciones.comdev → *Settings → Environment Variables* → agrega `GEMINI_API_KEY` con tu clave
+   de Google AI Studio (márcala **Sensitive**, entorno Production). Opcional: `GEMINI_MODEL` para forzar un modelo.
+2. *Deployments* → ⋯ → **Redeploy**.
+3. Robert conoce los servicios, obras, cobertura y los textos que edites en el panel. Puede: poner cualquier canción
+   (YouTube), controlar la música, abrir la galería filtrada, llevar a una página y dejar listo un mensaje de WhatsApp.
+4. En Google AI Studio / Google Cloud, pon un límite de gasto o cuota a la clave por seguridad.
+
 # Para aparecer primero al buscar "INFA" en Google
 El código ya está optimizado (títulos que empiezan por INFA, datos estructurados con todas las variantes del
 nombre y las redes, sitemap con imágenes). Lo que más pesa ahora está **fuera** del código:

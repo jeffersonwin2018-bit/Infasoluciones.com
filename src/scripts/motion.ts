@@ -129,35 +129,7 @@ if (fine && !reduce) {
   });
 }
 
-// ── Música ambiental opcional ─────────────────────────────────
-const btn = document.querySelector<HTMLButtonElement>('[data-sound]');
-let audio: HTMLAudioElement | null = null;
-const PREF = 'infa-sound';
-const setPref = (on: boolean) => { try { localStorage.setItem(PREF, on ? '1' : '0'); } catch {} };
-const fade = (to: number, ms = 900) => {
-  if (!audio) return;
-  const a = audio, from = a.volume, t0 = performance.now();
-  const step = (t: number) => { const k = Math.min(1, (t - t0) / ms); a.volume = from + (to - from) * k; if (k < 1) requestAnimationFrame(step); else if (to === 0) a.pause(); };
-  requestAnimationFrame(step);
-};
-const play = async () => {
-  if (!audio) { audio = new Audio('/media/audio/ambiente.mp3'); audio.loop = true; audio.volume = 0; }
-  try { await audio.play(); fade(0.35); btn?.setAttribute('aria-pressed', 'true'); btn?.setAttribute('aria-label', 'Silenciar música'); } catch {}
-};
-const stop = () => { fade(0); btn?.setAttribute('aria-pressed', 'false'); btn?.setAttribute('aria-label', 'Activar música ambiental'); };
-btn?.addEventListener('click', () => {
-  const on = btn.getAttribute('aria-pressed') !== 'true';
-  setPref(on);
-  on ? play() : stop();
-});
-// Si el visitante la activó antes, se reanuda con su primer toque (los navegadores bloquean el autoplay)
-try {
-  if (localStorage.getItem(PREF) === '1') {
-    const resume = () => { play(); removeEventListener('pointerdown', resume); removeEventListener('keydown', resume); };
-    addEventListener('pointerdown', resume, { once: true });
-    addEventListener('keydown', resume, { once: true });
-  }
-} catch {}
-document.addEventListener('visibilitychange', () => { if (audio && btn?.getAttribute('aria-pressed') === 'true') document.hidden ? audio.pause() : audio.play().catch(() => {}); });
+// ── Música y Robert ───────────────────────────────────────
+import './audio';
 
 export { gsap, ScrollTrigger, reduce };

@@ -1,12 +1,6 @@
 ---
-/** Logotipo vectorial ligero de INFA (IN / FA apilado, colores del logo original). */
+/** Logo real de INFA (IN/FA con martillo y llave) en insignia blanca redondeada. */
 interface Props { size?: number; mono?: boolean }
-const { size = 44, mono = false } = Astro.props;
+const { size = 44 } = Astro.props;
 ---
-<svg class="logo" width={size} height={size} viewBox="0 0 48 48" role="img" aria-label="INFA">
-  <rect width="48" height="48" rx="10" fill={mono ? 'currentColor' : '#fff'} fill-opacity={mono ? 0.08 : 1} />
-  <g font-family="Archivo Variable, Arial Black, Arial, sans-serif" font-weight="900" font-size="20" letter-spacing="-1">
-    <text x="7" y="22" fill={mono ? 'currentColor' : '#13294b'}>IN</text>
-    <text x="7" y="40" fill="var(--c-weld, #e8293a)">FA</text>
-  </g>
-</svg>
+<img class="logo" src={size > 48 ? '/media/brand/logo-badge-192.png' : '/media/brand/logo-badge-96.png'} srcset="/media/brand/logo-badge-96.png 96w, /media/brand/logo-badge-192.png 192w" sizes={`${size}px`} width={size} height={size} alt="INFA" decoding="async" style={`width:${size}px;height:${size}px;border-radius:${Math.round(size * 0.22)}px;box-shadow:0 4px 14px rgb(0 0 0 / .25)`} />

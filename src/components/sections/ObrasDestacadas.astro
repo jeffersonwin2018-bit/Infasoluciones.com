@@ -67,26 +67,32 @@ const { works, total } = Astro.props;
 
 <style>
   .obr { position: relative; background: var(--c-charcoal); overflow: hidden; }
-  .obr__pin { min-height: 100svh; display: flex; flex-direction: column; justify-content: center; gap: clamp(1.5rem, 4vh, 3rem); padding-block: calc(var(--header-h) + 2vh) 4vh; }
+  .obr__pin { min-height: 100svh; display: flex; flex-direction: column; justify-content: center; gap: clamp(1.5rem, 4vh, 3rem); padding-block: calc(var(--header-h) + 1vh) 3vh; }
   .obr__head { display: flex; justify-content: space-between; align-items: end; gap: var(--s-8); flex-wrap: wrap; }
   .obr__head h2 { margin: var(--s-4) 0 0; }
   .obr__head p { max-width: 36ch; margin: 0; }
   .obr__track { display: flex; align-items: flex-start; gap: clamp(1rem, 2.4vw, 2.4rem); padding-inline: var(--gutter); width: max-content; will-change: transform; }
-  .obr__card { margin: 0; flex: none; width: clamp(280px, 34vw, 560px); }
-  .obr__card--1 { width: clamp(240px, 26vw, 420px); margin-top: 6vh; }
-  .obr__card--2 { width: clamp(260px, 30vw, 480px); margin-top: 2vh; }
+  /* ancho limitado también por la altura de pantalla: en laptops la tarjeta y su texto entran completos */
+  .obr__card { margin: 0; flex: none; width: clamp(260px, min(34vw, 62svh), 560px); }
+  .obr__card--1 { width: clamp(220px, min(26vw, 36svh), 420px); margin-top: 4svh; }
+  .obr__card--2 { width: clamp(240px, min(30vw, 54svh), 480px); margin-top: 2svh; }
   .obr__media { position: relative; display: block; width: 100%; padding: 0; border: 0; overflow: hidden; border-radius: var(--radius-lg); background: var(--c-charcoal-2); aspect-ratio: 4 / 3.1; cursor: pointer; }
   .obr__card--1 .obr__media { aspect-ratio: 3 / 4; }
   .obr__media img { width: 112%; max-width: none; height: 100%; margin-left: -6%; object-fit: cover; transition: transform 1.2s var(--ease-out), filter .6s; filter: saturate(.92); }
   .obr__media:hover img { transform: scale(1.06); filter: saturate(1.1); }
   .obr__card figcaption { display: grid; gap: 6px; padding-top: var(--s-4); }
   .obr__card strong { font-size: var(--t-md); font-weight: 650; }
-  .obr__more { flex: none; align-self: center; display: grid; place-items: center; gap: var(--s-4); width: clamp(220px, 22vw, 320px); aspect-ratio: 1; border-radius: 50%; border: 1px solid rgb(255 255 255 / .2); text-decoration: none; text-align: center; font: 750 var(--t-lg)/1.05 var(--f-display); transition: background .5s, color .5s, border-color .5s; }
+  .obr__more { flex: none; align-self: center; display: grid; place-items: center; gap: var(--s-4); width: clamp(200px, min(22vw, 38svh), 320px); aspect-ratio: 1; border-radius: 50%; border: 1px solid rgb(255 255 255 / .2); text-decoration: none; text-align: center; font: 750 var(--t-lg)/1.05 var(--f-display); transition: background .5s, color .5s, border-color .5s; }
   .obr__more span { max-width: 9ch; }
   .obr__more:hover { background: var(--c-weld); border-color: var(--c-weld); }
   .obr__prog { height: 1px; background: rgb(255 255 255 / .12); }
   .obr__prog i { display: block; height: 100%; background: var(--c-weld); transform-origin: left; transform: scaleX(0); }
 
+  @media (max-height: 860px) and (min-width: 861px) {
+    .obr__head h2 { font-size: clamp(2rem, 6.4svh, 3.6rem); }
+    .obr__card--1 .obr__media { aspect-ratio: 1; }
+    .obr__pin { gap: 2svh; }
+  }
   @media (max-width: 860px) {
     .obr__pin { min-height: 0; padding-block: var(--section-y); }
     .obr__track { width: auto; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: var(--s-4); scrollbar-width: none; -webkit-overflow-scrolling: touch; }

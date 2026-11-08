@@ -6,6 +6,7 @@ import SEO from '@/components/seo/SEO.astro';
 import Header from '@/components/layout/Header.astro';
 import Footer from '@/components/layout/Footer.astro';
 import WhatsAppFloat from '@/components/layout/WhatsAppFloat.astro';
+import Robert from '@/components/layout/Robert.astro';
 import { organizationSchema, websiteSchema } from '@/lib/schema';
 import { SITE } from '@/config/site';
 import { DEFAULT_SETTINGS } from '@/data/settings';
@@ -24,7 +25,7 @@ const allSchemas = [organizationSchema(), websiteSchema(), ...schemas];
 const accent = settings.design.accent;
 ---
 <!doctype html>
-<html lang="es-PE" style={`--c-weld:${accent}`}>
+<html lang="es-PE" style={`--c-weld:${accent}`} data-wa={SITE.whatsapp}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -51,8 +52,7 @@ const accent = settings.design.accent;
     </main>
     <Footer />
     <WhatsAppFloat />
-    <a class="team-edit" href="/admin" hidden data-team-edit>✏️ Editar web</a>
-    <script is:inline>if (/(?:^|;\s*)infa_team=1/.test(document.cookie)) document.querySelector('[data-team-edit]').hidden = false;</script>
+    <Robert />
     <div class="cursor" aria-hidden="true"><span class="cursor__dot"></span><span class="cursor__ring"><em></em></span></div>
     <script>
       import '@/scripts/motion';
@@ -64,8 +64,6 @@ const accent = settings.design.accent;
   .annc { position: relative; z-index: 85; padding: 10px var(--gutter); background: var(--c-weld); color: #fff; text-align: center; font: 600 var(--t-sm)/1.3 var(--f-body); }
   .annc + :global(.hdr) { top: 0; }
   :global(html:has(.annc)) :global(.hdr:not(.is-scrolled)) { top: 40px; }
-  .team-edit { position: fixed; left: max(14px, env(safe-area-inset-left)); bottom: max(18px, env(safe-area-inset-bottom)); z-index: 95; padding: 12px 16px; border-radius: 99px; background: #13294b; color: #fff; font: 700 .9rem/1 var(--f-body); text-decoration: none; box-shadow: 0 10px 30px rgb(0 0 0 / .4); border: 1px solid rgb(255 255 255 / .2); }
-  .team-edit[hidden] { display: none; }
   .cursor { position: fixed; inset: 0; z-index: 999; pointer-events: none; display: none; mix-blend-mode: normal; }
   :global(.has-cursor) .cursor { display: block; }
   .cursor__dot, .cursor__ring { position: fixed; left: 0; top: 0; border-radius: 50%; translate: -50% -50%; }
