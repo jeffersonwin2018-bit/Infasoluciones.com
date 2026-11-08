@@ -16,7 +16,7 @@ const cats = Object.entries(WORK_CATEGORIES).filter(([k]) => works.some((w) => w
     <ul class="gal__grid" data-lb-group="galeria">
       {works.map((w, i) => (
         <li data-cat={w.category} data-reveal style={`--d:${(i % 3) * 0.06}s`}>
-          <button type="button" class="gal__item" data-cursor="Ver" data-lb data-src={w.src} data-title={w.title} data-meta={`${WORK_CATEGORIES[w.category]?.label}${w.location ? ' · ' + w.location : ''} · ${fecha(w.date)}`}>
+          <button type="button" class="gal__item" data-cursor="Ver" data-lb data-src={w.src} data-video={w.video} data-title={w.title} data-meta={`${WORK_CATEGORIES[w.category]?.label}${w.location ? ' · ' + w.location : ''} · ${fecha(w.date)}`}>
             <img src={w.thumb} alt={`${w.title}${w.location ? ' — ' + w.location : ''}`} width={w.w} height={w.h} loading={i < 6 ? 'eager' : 'lazy'} decoding="async" />
             <span class="gal__cap">
               <strong>{w.title}</strong>

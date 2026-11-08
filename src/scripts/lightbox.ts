@@ -14,7 +14,7 @@ function ensure() {
   box.innerHTML = `
     <button class="lb__x" type="button" aria-label="Cerrar">✕</button>
     <button class="lb__nav lb__prev" type="button" aria-label="Anterior">←</button>
-    <figure class="lb__fig"><img alt="" /><figcaption><strong></strong><span></span><em></em></figcaption></figure>
+    <figure class="lb__fig"><img alt="" /><video controls playsinline preload="metadata" hidden></video><figcaption><strong></strong><span></span><em></em></figcaption></figure>
     <button class="lb__nav lb__next" type="button" aria-label="Siguiente">→</button>`;
   document.body.appendChild(box);
   const style = document.createElement('style');
@@ -22,7 +22,7 @@ function ensure() {
   .lb{position:fixed;inset:0;z-index:400;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:1rem;padding:4vh 2vw;background:rgb(5 5 7/.94);backdrop-filter:blur(10px);opacity:0;visibility:hidden;transition:opacity .4s,visibility .4s}
   .lb.is-open{opacity:1;visibility:visible}
   .lb__fig{margin:0;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:1rem;min-width:0}
-  .lb__fig img{max-width:100%;max-height:78vh;object-fit:contain;border-radius:10px;transform:scale(.97);transition:transform .5s cubic-bezier(.16,1,.3,1),opacity .3s}
+  .lb__fig video{max-width:100%;max-height:78vh;border-radius:10px;background:#000}.lb__fig img{max-width:100%;max-height:78vh;object-fit:contain;border-radius:10px;transform:scale(.97);transition:transform .5s cubic-bezier(.16,1,.3,1),opacity .3s}
   .lb.is-open .lb__fig img{transform:none}
   .lb__fig figcaption{display:grid;gap:4px;text-align:center;color:#eef1f5}
   .lb__fig strong{font-size:1.1rem}.lb__fig span{color:#9aa2b1;font-size:.9rem}.lb__fig em{font:500 .72rem 'IBM Plex Mono',monospace;color:#9aa2b1;font-style:normal;letter-spacing:.1em}
@@ -51,15 +51,28 @@ function render() {
   const el = items[idx];
   const b = ensure();
   const img = b.querySelector('img')!;
-  img.style.opacity = '0';
-  img.onload = () => (img.style.opacity = '1');
-  img.src = el.dataset.src!;
-  img.alt = el.dataset.title || '';
+  const vid = b.querySelector('video')!;
+  vid.pause();
+  if (el.dataset.video) {
+    // Video: se reproduce con sonido; la música de la web se pausa mientras tanto
+    img.hidden = true; vid.hidden = false;
+    vid.poster = el.dataset.src!;
+    vid.src = el.dataset.video;
+    vid.play().catch(() => {});
+    import('./audio').then((a) => { if (a.music().playing) a.pause(); });
+  } else {
+    vid.hidden = true; vid.removeAttribute('src'); vid.load();
+    img.hidden = false;
+    img.style.opacity = '0';
+    img.onload = () => (img.style.opacity = '1');
+    img.src = el.dataset.src!;
+    img.alt = el.dataset.title || '';
+  }
   b.querySelector('strong')!.textContent = el.dataset.title || '';
   b.querySelector('span')!.textContent = el.dataset.meta || '';
   b.querySelector('em')!.textContent = `${idx + 1} / ${items.length}`;
   // precarga vecinas
-  [1, -1].forEach((d) => { const n = items[(idx + d + items.length) % items.length]; if (n) new Image().src = n.dataset.src!; });
+  [1, -1].forEach((d) => { const n = items[(idx + d + items.length) % items.length]; if (n && !n.dataset.video) new Image().src = n.dataset.src!; });
 }
 function go(d: number) { idx = (idx + d + items.length) % items.length; render(); }
 function open(el: HTMLElement) {
@@ -73,6 +86,7 @@ function open(el: HTMLElement) {
   (box!.querySelector('.lb__x') as HTMLElement).focus();
 }
 function close() {
+  box?.querySelector('video')?.pause();
   box?.classList.remove('is-open');
   (window as any).__lenis?.start();
   lastFocus?.focus();

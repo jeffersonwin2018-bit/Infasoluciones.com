@@ -8,7 +8,7 @@ import {
   publicUser, registerAttempt, saveUsers, sessionCookie, validatePassword, verifyPassword, type Role, type User,
 } from '@/lib/server/auth';
 import { getSettings, getWorks, saveSettings, saveWorks } from '@/lib/server/content';
-import { purgeContentCache, store } from '@/lib/server/store';
+import { deleteVideo, purgeContentCache, signedVideoUrl, store, videoExists, videosInBlob } from '@/lib/server/store';
 import { WORK_CATEGORIES, type Work, type WorkCategory } from '@/data/works';
 
 export const prerender = false;
@@ -39,6 +39,17 @@ export const ALL: APIRoute = async ({ request, params }) => {
   // ── Media pública (las fotos subidas) ───────────────────────────
   if (res === 'media' && method === 'GET') {
     const key = parts.slice(1).join('/');
+    // Videos: en Vercel se redirige a un enlace firmado del CDN de Blob (permite adelantar y no pasa por el servidor)
+    if (/^v\/[\w-]+\.(mp4|mov|webm|m4v)$/i.test(key)) {
+      if (videosInBlob()) {
+        const url = await signedVideoUrl(key).catch(() => null);
+        if (!url) return err('No encontrado', 404);
+        return new Response(null, { status: 302, headers: { Location: url, 'Cache-Control': 'public, max-age=3600', 'Vercel-CDN-Cache-Control': 'public, max-age=36000' } });
+      }
+      const bin = await (await store()).getBin(key);
+      if (!bin) return err('No encontrado', 404);
+      return new Response(bin.data, { headers: { 'Content-Type': bin.contentType, 'Accept-Ranges': 'none', 'Cache-Control': 'public, max-age=86400' } });
+    }
     if (!/^u\/[\w-]+\.(webp|jpg|jpeg|png|avif)$/.test(key)) return err('No encontrado', 404);
     const bin = await (await store()).getBin(key);
     if (!bin) return err('No encontrado', 404);
@@ -52,7 +63,7 @@ export const ALL: APIRoute = async ({ request, params }) => {
 
   // ── Sesión ──────────────────────────────────────────────────────
   if (res === 'session' && method === 'GET') {
-    return json({ user: me ? publicUser(me) : null, setupNeeded: users.length === 0, roles: ROLES, categories: WORK_CATEGORIES });
+    return json({ user: me ? publicUser(me) : null, setupNeeded: users.length === 0, roles: ROLES, categories: WORK_CATEGORIES, videoUpload: videosInBlob() ? 'blob' : 'local', maxVideoMB: 200 });
   }
 
   if (res === 'setup' && method === 'POST') {
@@ -128,6 +139,20 @@ export const ALL: APIRoute = async ({ request, params }) => {
       const ext = full.type === 'image/jpeg' ? 'jpg' : full.type.split('/')[1];
       const key = newId();
       const s = await store();
+      // Video (opcional): en Vercel ya se subió directo a Blob (llega su ruta); en local llega el archivo.
+      let video: string | undefined;
+      const vf = fd.get('videoFile');
+      const vp = str(fd.get('videoPath'), 120);
+      if (vf instanceof File && vf.size) {
+        if (!/^video\//.test(vf.type)) return err('Formato de video no permitido.');
+        const vext = vf.type === 'video/quicktime' ? 'mov' : vf.type === 'video/webm' ? 'webm' : 'mp4';
+        await s.setBin(`v/${key}.${vext}`, await vf.arrayBuffer(), vf.type);
+        video = `v/${key}.${vext}`;
+      } else if (vp) {
+        const vkey = vp.replace(/^media\//, '');
+        if (!/^v\/[\w-]+\.(mp4|mov|webm|m4v)$/i.test(vkey) || !(await videoExists(vkey))) return err('No se encontró el video subido. Intenta de nuevo.');
+        video = vkey;
+      }
       await s.setBin(`u/${key}.${ext}`, await full.arrayBuffer(), full.type);
       await s.setBin(`u/${key}-t.${ext}`, await thumb.arrayBuffer(), thumb.type);
       const cat = str(fd.get('category'), 30) as WorkCategory;
@@ -149,6 +174,7 @@ export const ALL: APIRoute = async ({ request, params }) => {
         uploadedBy: me.name,
         uploaderId: me.id,
         createdAt: new Date().toISOString(),
+        ...(video ? { kind: 'video' as const, video: `/api/media/${video}`, duration: Math.max(0, Math.min(36000, Number(fd.get('duration')) || 0)) } : {}),
       };
       works.unshift(w);
       await saveWorks(works);
@@ -190,6 +216,7 @@ export const ALL: APIRoute = async ({ request, params }) => {
         await s.del(w.src.replace('/api/media/', ''));
         await s.del(w.thumb.replace('/api/media/', ''));
       }
+      if (w.video?.startsWith('/api/media/')) await deleteVideo(w.video.replace('/api/media/', ''));
       await saveWorks(works.filter((x) => x.id !== w.id));
       await purgeContentCache();
       return json({ ok: true });

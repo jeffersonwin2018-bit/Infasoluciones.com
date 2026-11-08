@@ -96,3 +96,35 @@ export async function purgeContentCache() {
     console.warn('[INFA] invalidateByTag falló', e);
   }
 }
+
+// ── Videos ───────────────────────────────────────────────────
+// En Vercel los videos se suben directo a Blob (privado) y se sirven con enlaces firmados temporales,
+// así el video se descarga del CDN de Vercel (rápido, permite adelantar) y nadie accede a los datos privados.
+const signed = new Map<string, { url: string; until: number }>();
+export const videosInBlob = () => !!process.env.BLOB_READ_WRITE_TOKEN;
+
+export async function signedVideoUrl(key: string): Promise<string | null> {
+  const hit = signed.get(key);
+  if (hit && hit.until > Date.now() + 3600e3) return hit.url;
+  const { issueSignedToken, presignUrl } = await import('@vercel/blob');
+  const pathname = `media/${key}`;
+  const until = Date.now() + 24 * 3600e3;
+  const tok = await issueSignedToken({ pathname, operations: ['get', 'head'], validUntil: until });
+  const r: any = await presignUrl(tok, { operation: 'get', pathname, access: 'private' });
+  const url = r.presignedUrl ?? r.url;
+  if (!url) return null;
+  signed.set(key, { url, until: tok.validUntil ?? until });
+  return url;
+}
+
+export async function videoExists(key: string) {
+  if (!videosInBlob()) return !!(await (await store()).getBin(key));
+  const { head } = await import('@vercel/blob');
+  try { await head(`media/${key}`); return true; } catch { return false; }
+}
+
+export async function deleteVideo(key: string) {
+  if (!videosInBlob()) return (await store()).del(key);
+  const { del } = await import('@vercel/blob');
+  await del(`media/${key}`).catch(() => {});
+}

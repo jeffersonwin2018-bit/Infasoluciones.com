@@ -20,7 +20,7 @@ const now = Date.now();
       <ul class="rec__grid" data-lb-group="recientes">
         {works.map((w, i) => (
           <li data-reveal style={`--d:${i * 0.07}s`}>
-            <button type="button" class="rec__card" data-cursor="Ver" data-lb data-src={w.src} data-title={w.title} data-meta={`${w.location ? w.location + ' · ' : ''}${fecha(w.date)}`}>
+            <button type="button" class="rec__card" data-cursor="Ver" data-lb data-src={w.src} data-video={w.video} data-title={w.title} data-meta={`${w.location ? w.location + ' · ' : ''}${fecha(w.date)}`}>
               <span class="rec__img"><img src={w.thumb} alt={w.title} width={w.w} height={w.h} loading="lazy" decoding="async" /></span>
               <span class="rec__meta">
                 <span class="rec__when"><i></i>{haceCuanto(w.createdAt, now)}</span>

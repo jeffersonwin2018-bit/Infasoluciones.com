@@ -20,7 +20,7 @@ const taller = (await publicWorks()).filter((w) => w.category === 'taller').slic
       <p class="tag"><b>●</b> Nuestro taller, en fotos reales</p>
       <ul class="nt" data-lb-group="taller">
         {taller.map((w) => (
-          <li data-reveal><button type="button" data-lb data-cursor="Ver" data-src={w.src} data-title={w.title} data-meta={w.location}><img src={w.thumb} alt={w.title} width={w.w} height={w.h} loading="lazy" /></button><span class="muted">{w.title}</span></li>
+          <li data-reveal><button type="button" data-lb data-cursor="Ver" data-src={w.src} data-video={w.video} data-title={w.title} data-meta={w.location}><img src={w.thumb} alt={w.title} width={w.w} height={w.h} loading="lazy" /></button><span class="muted">{w.title}</span></li>
         ))}
       </ul>
     </div></section>

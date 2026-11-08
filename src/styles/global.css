@@ -83,3 +83,14 @@ p { margin: 0 0 var(--s-4); max-width: 65ch; text-wrap: pretty; }
 @media (max-width: 520px) {
   h1 { overflow-wrap: break-word; }
 }
+
+/* Videos en galerías: botón ▶ sobre la portada */
+[data-lb][data-video] { position: relative; }
+[data-lb][data-video]:not(.rec__card)::after, .rec__card[data-video] .rec__img::after {
+  content: '▶'; position: absolute; left: 50%; top: 50%; translate: -50% -50%; z-index: 3;
+  display: grid; place-items: center; width: 64px; height: 64px; padding-left: 4px; border-radius: 50%;
+  background: rgb(0 0 0 / .55); backdrop-filter: blur(6px); border: 2px solid rgb(255 255 255 / .85);
+  color: #fff; font-size: 22px; pointer-events: none; transition: transform .4s var(--ease-out), background .3s;
+}
+.rec__card[data-video] .rec__img { position: relative; }
+[data-lb][data-video]:hover::after, .rec__card[data-video]:hover .rec__img::after { transform: scale(1.1); background: var(--c-weld); }

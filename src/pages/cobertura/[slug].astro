@@ -24,7 +24,7 @@ const local = (await publicWorks()).filter((w) => (w.location ?? '').toLowerCase
     <section class="section"><div class="shell">
       <p class="tag"><b>●</b> {local.length} obras reales en {c.nombre}</p>
       <ul class="loc" data-lb-group="local">
-        {local.map((w) => <li data-reveal><button type="button" data-lb data-cursor="Ver" data-src={w.src} data-title={w.title} data-meta={w.location}><img src={w.thumb} alt={`${w.title} — ${w.location}`} width={w.w} height={w.h} loading="lazy" /></button><span class="muted">{w.title}</span></li>)}
+        {local.map((w) => <li data-reveal><button type="button" data-lb data-cursor="Ver" data-src={w.src} data-video={w.video} data-title={w.title} data-meta={w.location}><img src={w.thumb} alt={`${w.title} — ${w.location}`} width={w.w} height={w.h} loading="lazy" /></button><span class="muted">{w.title}</span></li>)}
       </ul>
     </div></section>
   )}

@@ -26,4 +26,7 @@ export interface Work {
   uploadedBy: string;    // nombre de quien la subió
   uploaderId?: string;
   createdAt: string;     // ISO, fecha de subida
+  kind?: 'image' | 'video';
+  video?: string;        // URL del video (src/thumb son su portada)
+  duration?: number;     // segundos
 }

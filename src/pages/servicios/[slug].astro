@@ -46,7 +46,7 @@ const others = SERVICES.filter((x) => x.slug !== s.slug);
       <div class="sec-head"><div><p class="tag">Fotos reales</p><h2 data-split>Obras de este tipo.</h2></div><a class="btn" href="/proyectos">Ver galería completa</a></div>
       <ul class="svc-w__grid" data-lb-group="svc">
         {related.map((w) => (
-          <li data-reveal><button type="button" data-lb data-cursor="Ver" data-src={w.src} data-title={w.title} data-meta={`${WORK_CATEGORIES[w.category]?.label}${w.location ? ' · ' + w.location : ''} · ${fecha(w.date)}`}>
+          <li data-reveal><button type="button" data-lb data-cursor="Ver" data-src={w.src} data-video={w.video} data-title={w.title} data-meta={`${WORK_CATEGORIES[w.category]?.label}${w.location ? ' · ' + w.location : ''} · ${fecha(w.date)}`}>
             <span class="badge-real">Obra real</span><img src={w.thumb} alt={`${w.title}${w.location ? ' — ' + w.location : ''}`} width={w.w} height={w.h} loading="lazy" decoding="async" />
           </button></li>
         ))}

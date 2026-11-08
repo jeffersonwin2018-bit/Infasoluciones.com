@@ -3,7 +3,7 @@
  */
 type Role = 'propietario' | 'editor' | 'colaborador';
 interface User { id: string; username: string; name: string; role: Role; active: boolean; createdAt: string; lastLogin?: string }
-interface Work { id: string; title: string; description?: string; category: string; location?: string; date: string; src: string; thumb: string; w: number; h: number; featured: boolean; visible: boolean; order: number; uploadedBy: string; uploaderId?: string; createdAt: string }
+interface Work { id: string; title: string; description?: string; category: string; location?: string; date: string; src: string; thumb: string; w: number; h: number; featured: boolean; visible: boolean; order: number; uploadedBy: string; uploaderId?: string; createdAt: string; kind?: string; video?: string; duration?: number }
 interface Session { user: User | null; setupNeeded: boolean; roles: Record<Role, { label: string; rank: number; desc: string }>; categories: Record<string, { label: string }> }
 
 const app = document.getElementById('app')!;
@@ -79,7 +79,7 @@ function renderAuth(setup: boolean) {
 
 // ── Estructura principal ───────────────────────────────────
 const TABS = () => [
-  { id: 'subir', label: '📷 Subir fotos', show: true },
+  { id: 'subir', label: '📷 Subir fotos y videos', show: true },
   { id: 'trabajos', label: '🖼️ Trabajos', show: true },
   { id: 'textos', label: '✏️ Textos', show: isEditor() },
   { id: 'diseno', label: '🎨 Diseño', show: isEditor() },
@@ -117,20 +117,20 @@ function go(t: string) {
 
 const catOptions = (sel = 'exhibicion') => Object.entries(S.categories).map(([k, c]) => `<option value="${k}" ${k === sel ? 'selected' : ''}>${esc(c.label)}</option>`).join('');
 
-// ── Subir fotos ────────────────────────────────────────────
-interface Pending { file: File; url: string; id: string; date: string }
+// ── Subir fotos y videos ───────────────────────────────────
+interface Pending { file: File; url: string; id: string; date: string; video: boolean }
 let pending: Pending[] = [];
 
 function viewSubir(v: HTMLElement) {
   v.innerHTML = `
   <section class="card">
-    <h2>Subir fotos de trabajos</h2>
-    <p class="sub">Elige fotos del celular o toma una ahora. Se optimizan solas y se publican con su fecha. ${isEditor() ? '' : 'Solo podrás editar las fotos que tú subas.'}</p>
+    <h2>Subir fotos y videos de trabajos</h2>
+    <p class="sub">Elige fotos o videos del celular, o graba uno ahora. Las fotos se optimizan solas; a los videos se les saca una portada automática. Todo se publica con su fecha. ${isEditor() ? '' : 'Solo podrás editar lo que tú subas.'}</p>
     <label class="drop" data-drop>
       <span class="drop__ico">+</span>
-      <strong>Toca para elegir fotos</strong>
-      <span>o arrástralas aquí · puedes elegir varias</span>
-      <input type="file" accept="image/*" multiple hidden data-file>
+      <strong>Toca para elegir fotos o videos</strong>
+      <span>o arrástralos aquí · puedes elegir varios · videos de hasta ${(S as any).maxVideoMB ?? 200} MB</span>
+      <input type="file" accept="image/*,video/*" multiple hidden data-file>
     </label>
     <div class="ups" data-ups></div>
   </section>
@@ -146,10 +146,14 @@ function viewSubir(v: HTMLElement) {
 }
 
 function addFiles(files: File[]) {
-  for (const f of files.filter((f) => f.type.startsWith('image/'))) {
+  const maxMB = (S as any).maxVideoMB ?? 200;
+  for (const f of files) {
+    const video = f.type.startsWith('video/');
+    if (!video && !f.type.startsWith('image/')) continue;
+    if (video && f.size > maxMB * 1024 * 1024) { toast(`El video "${f.name}" pesa ${Math.round(f.size / 1048576)} MB. El máximo es ${maxMB} MB: recórtalo o grábalo en menor calidad.`, true); continue; }
     const d = new Date(f.lastModified || Date.now());
     const date = new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
-    pending.push({ file: f, url: URL.createObjectURL(f), id: Math.random().toString(36).slice(2), date: date > today() ? today() : date });
+    pending.push({ file: f, url: URL.createObjectURL(f), id: Math.random().toString(36).slice(2), date: date > today() ? today() : date, video });
   }
   renderPending();
 }
@@ -160,9 +164,9 @@ function renderPending() {
   if (!box) return;
   box.innerHTML = pending.map((p) => `
     <div class="up" data-p="${p.id}">
-      <div class="up__img"><img src="${p.url}" alt=""><button class="up__x" type="button" data-rm aria-label="Quitar">✕</button><div class="up__st" hidden></div></div>
+      <div class="up__img">${p.video ? `<video src="${p.url}#t=0.8" muted playsinline preload="metadata"></video><span class="up__vid">▶ Video · ${Math.round(p.file.size / 1048576)} MB</span>` : `<img src="${p.url}" alt="">`}<button class="up__x" type="button" data-rm aria-label="Quitar">✕</button><div class="up__st" hidden></div><div class="up__bar" hidden><i></i></div></div>
       <div>
-        <label class="f"><span>Título del trabajo</span><input type="text" name="title" maxlength="120" placeholder="Ej.: Isla de exhibición para TV"></label>
+        <label class="f"><span>Título del trabajo</span><input type="text" name="title" maxlength="120" placeholder="${p.video ? 'Ej.: Instalación de módulo en tienda' : 'Ej.: Isla de exhibición para TV'}"></label>
         <div class="row">
           <label class="f"><span>Tipo</span><select name="category">${catOptions()}</select></label>
           <label class="f"><span>Fecha</span><input type="date" name="date" value="${p.date}" max="${today()}"></label>
@@ -178,27 +182,45 @@ function renderPending() {
     renderPending();
   }));
   bar.hidden = pending.length === 0;
-  $('[data-publish]').textContent = `Publicar ${pending.length} foto${pending.length === 1 ? '' : 's'}`;
+  const nv = pending.filter((p) => p.video).length, nf = pending.length - nv;
+  $('[data-publish]').textContent = `Publicar ${[nf ? `${nf} foto${nf === 1 ? '' : 's'}` : '', nv ? `${nv} video${nv === 1 ? '' : 's'}` : ''].filter(Boolean).join(' y ')}`;
 }
 
-async function resize(file: File, max: number, q: number): Promise<{ blob: Blob; w: number; h: number }> {
-  let bmp: ImageBitmap | HTMLImageElement;
-  try { bmp = await createImageBitmap(file, { imageOrientation: 'from-image' } as any); }
-  catch {
-    bmp = await new Promise<HTMLImageElement>((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = URL.createObjectURL(file); });
-  }
-  const sw = (bmp as any).width, sh = (bmp as any).height;
+/** Redimensiona una imagen (o un cuadro de video) y la convierte a WebP (o JPG si el navegador no puede). */
+async function toImage(source: CanvasImageSource, sw: number, sh: number, max: number, q: number): Promise<{ blob: Blob; w: number; h: number }> {
   const k = Math.min(1, max / Math.max(sw, sh));
   const w = Math.round(sw * k), h = Math.round(sh * k);
   const c = document.createElement('canvas');
   c.width = w; c.height = h;
   const ctx = c.getContext('2d')!;
   ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(bmp as any, 0, 0, w, h);
+  ctx.drawImage(source, 0, 0, w, h);
   const toBlob = (type: string) => new Promise<Blob | null>((res) => c.toBlob(res, type, q));
   let blob = await toBlob('image/webp');
   if (!blob || blob.type !== 'image/webp') blob = await toBlob('image/jpeg');
   return { blob: blob!, w, h };
+}
+
+async function loadImage(file: File): Promise<{ src: CanvasImageSource; w: number; h: number }> {
+  try { const b = await createImageBitmap(file, { imageOrientation: 'from-image' } as any); return { src: b, w: b.width, h: b.height }; }
+  catch {
+    const i = await new Promise<HTMLImageElement>((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = URL.createObjectURL(file); });
+    return { src: i, w: i.naturalWidth, h: i.naturalHeight };
+  }
+}
+
+/** Saca un cuadro del video (al 1 s o a un tercio) para usarlo de portada. */
+function videoFrame(file: File): Promise<{ src: CanvasImageSource; w: number; h: number; duration: number }> {
+  return new Promise((res, rej) => {
+    const v = document.createElement('video');
+    v.muted = true; v.playsInline = true; v.preload = 'auto';
+    v.src = URL.createObjectURL(file);
+    const fail = () => rej(new Error('Este formato de video no se puede leer en este navegador. Prueba con un video MP4.'));
+    const t = setTimeout(fail, 20000);
+    v.onerror = () => { clearTimeout(t); fail(); };
+    v.onloadedmetadata = () => { v.currentTime = Math.min(1, (v.duration || 3) / 3); };
+    v.onseeked = () => { clearTimeout(t); res({ src: v, w: v.videoWidth, h: v.videoHeight, duration: Math.round(v.duration || 0) }); };
+  });
 }
 
 async function publishAll() {
@@ -208,12 +230,36 @@ async function publishAll() {
   for (const p of [...pending]) {
     const card = $(`[data-p="${p.id}"]`);
     const st = $('.up__st', card);
-    st.hidden = false; st.className = 'up__st'; st.textContent = 'Optimizando…';
+    const bar = $('.up__bar', card);
+    st.hidden = false; st.className = 'up__st'; st.textContent = p.video ? 'Preparando portada…' : 'Optimizando…';
     try {
-      const full = await resize(p.file, 2000, 0.82);
-      const thumb = await resize(p.file, 720, 0.72);
-      st.textContent = 'Subiendo…';
       const fd = new FormData();
+      const srcImg = p.video ? await videoFrame(p.file) : await loadImage(p.file);
+      const full = await toImage(srcImg.src, srcImg.w, srcImg.h, 2000, 0.82);
+      const thumb = await toImage(srcImg.src, srcImg.w, srcImg.h, 720, 0.72);
+
+      if (p.video) {
+        fd.append('duration', String((srcImg as any).duration || 0));
+        if ((S as any).videoUpload === 'blob') {
+          // Subida directa del celular a Vercel Blob (con progreso), sin pasar por el servidor de la web
+          st.textContent = 'Subiendo video… 0%';
+          bar.hidden = false;
+          const { upload } = await import('@vercel/blob/client');
+          const ext = /quicktime/.test(p.file.type) ? 'mov' : /webm/.test(p.file.type) ? 'webm' : 'mp4';
+          const name = `media/v/${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}.${ext}`;
+          const r = await upload(name, p.file, {
+            access: 'private', handleUploadUrl: '/api/blob-upload', contentType: p.file.type || 'video/mp4',
+            multipart: p.file.size > 20 * 1024 * 1024,
+            onUploadProgress: (e) => { st.textContent = `Subiendo video… ${Math.round(e.percentage)}%`; ($('i', bar) as HTMLElement).style.width = e.percentage + '%'; },
+          });
+          fd.append('videoPath', r.pathname);
+        } else {
+          st.textContent = 'Subiendo video…';
+          fd.append('videoFile', p.file, p.file.name);
+        }
+      }
+
+      st.textContent = 'Publicando…';
       const ext = full.blob.type === 'image/webp' ? 'webp' : 'jpg';
       fd.append('full', full.blob, `foto.${ext}`);
       fd.append('thumb', thumb.blob, `mini.${ext}`);
@@ -224,16 +270,16 @@ async function publishAll() {
       });
       const w = await api<Work>('works', { method: 'POST', body: fd });
       works.unshift(w);
-      st.textContent = '✓ Publicada'; st.classList.add('ok');
+      st.textContent = '✓ Publicado'; st.classList.add('ok'); bar.hidden = true;
       pending = pending.filter((x) => x.id !== p.id);
       ok++;
     } catch (e: any) {
-      st.textContent = '✕ ' + e.message; st.classList.add('bad');
+      st.textContent = '✕ ' + (e.message || 'Error al subir'); st.classList.add('bad'); bar.hidden = true;
     }
   }
   btn.disabled = false;
   if (ok) {
-    toast(`✓ ${ok} foto${ok > 1 ? 's' : ''} publicada${ok > 1 ? 's' : ''} en la web`);
+    toast(`✓ ${ok} archivo${ok > 1 ? 's' : ''} publicado${ok > 1 ? 's' : ''} en la web`);
     setTimeout(renderPending, 1200);
   } else toast('No se pudo subir. Revisa tu conexión.', true);
 }
@@ -259,7 +305,7 @@ function renderGrid() {
     const i = works.indexOf(w);
     const e = canEdit(w);
     return `<article class="w ${w.visible ? '' : 'is-hidden'}" data-w="${esc(w.id)}">
-      <div class="w__img"><img src="${esc(w.thumb)}" alt="" loading="lazy"><div class="w__badges">${w.featured ? '<span class="pill pill--star">⭐ Portada</span>' : ''}${w.visible ? '' : '<span class="pill pill--hid">Oculta</span>'}</div></div>
+      <div class="w__img"><img src="${esc(w.thumb)}" alt="" loading="lazy"><div class="w__badges">${w.video ? '<span class="pill pill--vid">▶ Video</span>' : ''}${w.featured ? '<span class="pill pill--star">⭐ Portada</span>' : ''}${w.visible ? '' : '<span class="pill pill--hid">Oculta</span>'}</div></div>
       <div class="w__body"><strong>${esc(w.title)}</strong><small>${esc(S.categories[w.category]?.label ?? '')} · ${fdate(w.date)}${w.location ? ' · ' + esc(w.location) : ''}<br>Subida por ${esc(w.uploadedBy)}</small></div>
       <div class="w__act">
         <button type="button" data-a="star" title="Portada" ${isEditor() ? '' : 'disabled'}>${w.featured ? '⭐' : '☆'}</button>
