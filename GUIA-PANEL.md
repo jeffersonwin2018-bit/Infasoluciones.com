@@ -40,7 +40,7 @@
 
 ## Activar el panel (una sola vez — Jefferson)
 1. En Vercel → proyecto infasoluciones.comdev → *Settings → Environment Variables* agrega
-    = una clave secreta que solo tú sepas (entorno Production).
+   `INFA_SETUP_CODE` = una clave secreta que solo tú sepas (entorno Production).
 2. *Deployments* → en el último, menú ⋯ → **Redeploy** (para que tome la variable).
 3. Entra a **www.infasoluciones.com/admin**, crea tu cuenta de propietario con esa clave, y luego crea la de tu papá
    como **Propietario** y las de los familiares como **Colaborador**.
