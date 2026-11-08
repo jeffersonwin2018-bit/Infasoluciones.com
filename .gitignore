@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.astro/
+assets-src/
+.env
+.DS_Store
+
+.data/
+.netlify/
+.vercel/

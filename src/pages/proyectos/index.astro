@@ -1,0 +1,30 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/ui/PageHero.astro';
+import Galeria from '@/components/sections/Galeria.astro';
+import CTAFinal from '@/components/sections/CTAFinal.astro';
+import { breadcrumbSchema } from '@/lib/schema';
+import { publicWorks } from '@/lib/server/content';
+import { SITE } from '@/config/site';
+
+const works = await publicWorks();
+const crumbs = [{ name: 'Inicio', path: '/' }, { name: 'Obras', path: '/proyectos' }];
+const cover = works.find((w) => w.featured) ?? works[0];
+const gallerySchema = {
+  '@context': 'https://schema.org',
+  '@type': 'ImageGallery',
+  name: 'Obras realizadas por INFA',
+  url: `${SITE.url}/proyectos`,
+  image: works.slice(0, 30).map((w) => ({ '@type': 'ImageObject', contentUrl: new URL(w.src, SITE.url).href, name: w.title, contentLocation: w.location || undefined, dateCreated: w.date })),
+};
+---
+<BaseLayout
+  title="Obras realizadas — módulos de exhibición, muebles y estructuras | INFA"
+  description={`Galería con ${works.length} fotos reales de obras de INFA: módulos de exhibición en Saga Falabella, Plaza Vea, Curacao, EFE y más, mobiliario a medida y metalmecánica.`}
+  schemas={[breadcrumbSchema(crumbs), gallerySchema]}
+  image={cover?.src}
+>
+  <PageHero tag={`${works.length} fotos reales · se actualiza constantemente`} title="Obras que hablan por nosotros." lead="Cada foto es un trabajo real de INFA: diseñado, fabricado e instalado por nuestro equipo. La galería crece cada semana con lo nuevo del taller." crumbs={crumbs} image={cover?.src} />
+  <Galeria works={works} />
+  <CTAFinal />
+</BaseLayout>

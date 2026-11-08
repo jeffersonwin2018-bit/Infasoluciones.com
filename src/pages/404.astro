@@ -1,0 +1,9 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/ui/PageHero.astro';
+---
+<BaseLayout title="Página no encontrada" description="La página que buscas no existe." noindex>
+  <PageHero tag="404" title="Esta pieza no está en el plano.">
+    <p><a class="btn btn--weld" href="/">Volver al inicio</a></p>
+  </PageHero>
+</BaseLayout>

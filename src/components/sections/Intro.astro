@@ -1,0 +1,32 @@
+---
+const s = Astro.locals.settings;
+---
+<section class="section section--light intro" aria-labelledby="intro-title">
+  <div class="shell">
+    <p class="tag"><b>01</b> / Quiénes somos</p>
+    <h2 id="intro-title" class="intro__title" data-split>{s.intro.title}</h2>
+    <p class="intro__body" data-words>{s.intro.body}</p>
+    <dl class="intro__stats">
+      {s.stats.map((st, i) => (
+        <div data-reveal style={`--d:${i * 0.08}s`}>
+          <dt>{st.label}</dt>
+          <dd data-count={st.value}>{st.value}</dd>
+        </div>
+      ))}
+    </dl>
+  </div>
+</section>
+<style>
+  .intro__title { max-width: 18ch; margin-top: var(--s-6); }
+  .intro__body { max-width: 34ch; margin: var(--s-12) 0 0 auto; font: 600 clamp(1.4rem, 1rem + 1.8vw, 2.7rem)/1.18 var(--f-display); letter-spacing: -.02em; }
+  .intro__stats { display: grid; grid-template-columns: repeat(4, 1fr); margin: clamp(3rem, 8vw, 7rem) 0 0; border-top: 1px solid rgb(0 0 0 / .14); }
+  .intro__stats div { padding: var(--s-6) var(--s-6) 0 0; display: flex; flex-direction: column-reverse; gap: var(--s-2); }
+  .intro__stats div + div { padding-left: var(--s-6); border-left: 1px solid rgb(0 0 0 / .14); }
+  .intro__stats dt { font: 500 var(--t-xs) var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: #5d6370; }
+  .intro__stats dd { margin: 0; font: 850 clamp(2.6rem, 2rem + 3vw, 5.4rem)/1 var(--f-display); font-variation-settings: 'wdth' 110; letter-spacing: -.04em; }
+  @media (max-width: 800px) {
+    .intro__stats { grid-template-columns: 1fr 1fr; }
+    .intro__stats div:nth-child(3) { padding-left: 0; border-left: 0; }
+    .intro__stats div:nth-child(n + 3) { border-top: 1px solid rgb(0 0 0 / .14); margin-top: var(--s-6); }
+  }
+</style>

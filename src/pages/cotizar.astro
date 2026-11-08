@@ -1,0 +1,13 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Cotizador from '@/components/sections/Cotizador.astro';
+import { SITE } from '@/config/site';
+---
+<BaseLayout title="Cotizar obra — cotización formal con factura" description="Envía tipo de obra, medidas y ubicación. Recibe una cotización escrita de INFA Soluciones por WhatsApp, con factura y RUC.">
+  <div style="padding-top:var(--header-h)"></div>
+  <Cotizador />
+  <section class="section"><div class="shell">
+    <p class="tag">Contacto directo</p>
+    <p><a href={`tel:+${SITE.whatsapp}`}>{SITE.phoneDisplay}</a>{SITE.email && <> · <a href={`mailto:${SITE.email}`}>{SITE.email}</a></>}</p>
+  </div></section>
+</BaseLayout>

@@ -1,0 +1,81 @@
+---
+/** Una página por servicio = una keyword por URL. Landing SEO + conversión. */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/ui/PageHero.astro';
+import Cotizador from '@/components/sections/Cotizador.astro';
+import CTAFinal from '@/components/sections/CTAFinal.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { SERVICES, DIVISIONS, serviceBySlug, shortTitle } from '@/data/services';
+import { WORK_CATEGORIES } from '@/data/works';
+import { serviceSchema, breadcrumbSchema } from '@/lib/schema';
+import { waLink } from '@/lib/whatsapp';
+import { publicWorks } from '@/lib/server/content';
+import { fecha } from '@/lib/format';
+
+const s = serviceBySlug(Astro.params.slug ?? '');
+if (!s) return Astro.rewrite('/404');
+const crumbs = [{ name: 'Inicio', path: '/' }, { name: 'Servicios', path: '/servicios' }, { name: shortTitle(s), path: `/servicios/${s.slug}` }];
+const related = (await publicWorks()).filter((w) => w.category === s.workCategory).slice(0, 9);
+const others = SERVICES.filter((x) => x.slug !== s.slug);
+---
+<BaseLayout title={`${s.title} | INFA`} description={`${s.short} Diseño, fabricación e instalación con cotización formal. Lima, Arequipa y todo el Perú.`} schemas={[serviceSchema(s), breadcrumbSchema(crumbs)]} image={s.image}>
+  <PageHero tag={DIVISIONS[s.division].label} title={s.title} lead={s.short} crumbs={crumbs} image={s.image} imageAi={!s.imageIsReal}>
+    <a class="btn btn--wa btn--lg" style="margin-top:2rem" data-magnetic href={waLink(`Hola INFA 👋, quisiera cotizar: ${shortTitle(s)}.`)} target="_blank" rel="noopener"><Icon name="whatsapp" size={22} /> Cotizar este servicio</a>
+  </PageHero>
+
+  <section class="section">
+    <div class="shell svc">
+      <div class="svc__intro">
+        {s.intro.map((p, i) => <p data-reveal class={i === 0 ? 'svc__lead' : 'muted'}>{p}</p>)}
+      </div>
+      <div class="svc__cols">
+        <div data-reveal>
+          <p class="tag"><b>●</b> Qué incluye</p>
+          <ul>{s.items.map((i) => <li>{i}</li>)}</ul>
+        </div>
+        <div data-reveal style="--d:.1s">
+          <p class="tag"><b>●</b> Especificación</p>
+          <ul class="svc__specs">{s.specs.map((i) => <li>{i}</li>)}</ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {related.length > 0 && (
+    <section class="section svc-w"><div class="shell">
+      <div class="sec-head"><div><p class="tag">Fotos reales</p><h2 data-split>Obras de este tipo.</h2></div><a class="btn" href="/proyectos">Ver galería completa</a></div>
+      <ul class="svc-w__grid" data-lb-group="svc">
+        {related.map((w) => (
+          <li data-reveal><button type="button" data-lb data-cursor="Ver" data-src={w.src} data-title={w.title} data-meta={`${WORK_CATEGORIES[w.category]?.label}${w.location ? ' · ' + w.location : ''} · ${fecha(w.date)}`}>
+            <span class="badge-real">Obra real</span><img src={w.thumb} alt={`${w.title}${w.location ? ' — ' + w.location : ''}`} width={w.w} height={w.h} loading="lazy" decoding="async" />
+          </button></li>
+        ))}
+      </ul>
+    </div></section>
+  )}
+
+  <Cotizador />
+
+  <section class="section"><div class="shell">
+    <p class="tag">Otros servicios</p>
+    <ul class="svc-o">{others.map((x) => <li><a href={`/servicios/${x.slug}`}>{shortTitle(x)} <Icon name="arrow" size={16} /></a></li>)}</ul>
+  </div></section>
+  <CTAFinal />
+</BaseLayout>
+<script>import '@/scripts/lightbox';</script>
+<style>
+  .svc { display: grid; grid-template-columns: 1.3fr 1fr; gap: clamp(2rem, 6vw, 6rem); }
+  .svc__lead { font: 600 clamp(1.3rem, 1rem + 1.2vw, 2rem)/1.25 var(--f-display); letter-spacing: -.01em; }
+  .svc__cols { display: grid; gap: var(--s-8); align-content: start; }
+  .svc__cols ul { padding: 0; margin: var(--s-4) 0 0; list-style: none; border-top: var(--line); }
+  .svc__cols li { padding: 12px 0; border-bottom: var(--line); }
+  .svc__specs li { font: 500 var(--t-sm) var(--f-mono); color: var(--c-steel-dim); }
+  .svc-w__grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-4); }
+  .svc-w__grid button { position: relative; display: block; width: 100%; padding: 0; border: 0; border-radius: 14px; overflow: hidden; aspect-ratio: 4 / 3; cursor: pointer; background: var(--c-charcoal-2); }
+  .svc-w__grid img { width: 100%; height: 100%; object-fit: cover; transition: transform 1s var(--ease-out); }
+  .svc-w__grid button:hover img { transform: scale(1.05); }
+  .svc-o { list-style: none; padding: 0; margin: var(--s-6) 0 0; display: flex; flex-wrap: wrap; gap: var(--s-2); }
+  .svc-o a { display: inline-flex; align-items: center; gap: 8px; padding: 12px 18px; border: var(--line); border-radius: 99px; text-decoration: none; transition: background .3s, border-color .3s; }
+  .svc-o a:hover { background: var(--c-weld); border-color: var(--c-weld); }
+  @media (max-width: 860px) { .svc { grid-template-columns: 1fr; } .svc-w__grid { grid-template-columns: 1fr 1fr; } }
+</style>

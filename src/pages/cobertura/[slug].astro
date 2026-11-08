@@ -1,0 +1,47 @@
+---
+/** Páginas locales (SEO). Arequipa muestra obras reales hechas allí; las demás, servicios disponibles. */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/ui/PageHero.astro';
+import Cotizador from '@/components/sections/Cotizador.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { COBERTURA } from '@/data/content';
+import { SERVICES, shortTitle } from '@/data/services';
+import { breadcrumbSchema } from '@/lib/schema';
+import { publicWorks } from '@/lib/server/content';
+
+const c = COBERTURA.find((x) => x.slug === Astro.params.slug);
+if (!c) return Astro.rewrite('/404');
+const crumbs = [{ name: 'Inicio', path: '/' }, { name: 'Cobertura', path: '/cobertura' }, { name: c.nombre, path: `/cobertura/${c.slug}` }];
+const local = (await publicWorks()).filter((w) => (w.location ?? '').toLowerCase().includes(c.nombre.toLowerCase().split(' ')[0])).slice(0, 9);
+---
+<BaseLayout
+  title={`Muebles, módulos de exhibición y metalmecánica en ${c.nombre} | INFA`}
+  description={`INFA fabrica e instala módulos de exhibición, muebles a medida, carpintería y estructuras metálicas en ${c.nombre}. Cotización formal por WhatsApp.`}
+  schemas={[breadcrumbSchema(crumbs)]}
+>
+  <PageHero tag="Cobertura" title={`INFA en ${c.nombre}`} lead={c.foco} crumbs={crumbs} image={local[0]?.src ?? '/media/ia/retail.webp'} imageAi={!local[0]} />
+  {local.length > 0 && (
+    <section class="section"><div class="shell">
+      <p class="tag"><b>●</b> {local.length} obras reales en {c.nombre}</p>
+      <ul class="loc" data-lb-group="local">
+        {local.map((w) => <li data-reveal><button type="button" data-lb data-cursor="Ver" data-src={w.src} data-title={w.title} data-meta={w.location}><img src={w.thumb} alt={`${w.title} — ${w.location}`} width={w.w} height={w.h} loading="lazy" /></button><span class="muted">{w.title}</span></li>)}
+      </ul>
+    </div></section>
+  )}
+  <section class="section"><div class="shell">
+    <h2 data-split>Servicios disponibles en {c.nombre}</h2>
+    <ul class="loc-s">{SERVICES.map((s) => <li><a href={`/servicios/${s.slug}`}>{shortTitle(s)} <Icon name="arrow" size={16} /></a></li>)}</ul>
+  </div></section>
+  <Cotizador />
+</BaseLayout>
+<script>import '@/scripts/lightbox';</script>
+<style>
+  .loc { list-style: none; padding: 0; margin: var(--s-8) 0 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-4); }
+  .loc button { display: block; width: 100%; padding: 0; border: 0; border-radius: 14px; overflow: hidden; aspect-ratio: 4 / 3; cursor: pointer; }
+  .loc img { width: 100%; height: 100%; object-fit: cover; }
+  .loc span { display: block; margin-top: 6px; font-size: var(--t-sm); }
+  .loc-s { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: var(--s-2); }
+  .loc-s a { display: inline-flex; gap: 8px; align-items: center; padding: 12px 18px; border: var(--line); border-radius: 99px; text-decoration: none; }
+  .loc-s a:hover { background: var(--c-weld); border-color: var(--c-weld); }
+  @media (max-width: 700px) { .loc { grid-template-columns: 1fr 1fr; } }
+</style>

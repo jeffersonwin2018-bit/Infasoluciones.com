@@ -1,0 +1,35 @@
+---
+import { COMPARATIVA } from '@/data/content';
+---
+<section class="section matriz" aria-labelledby="matriz-title">
+  <div class="shell">
+    <p class="tag"><b>02</b> / Estándar</p>
+    <h2 id="matriz-title" data-reveal>Lo informal sale caro.<br />Lo bien hecho, una vez.</h2>
+    <div class="matriz__table" role="table" aria-label="Comparativa servicio informal vs. estándar INFA">
+      <div class="matriz__row matriz__head" role="row">
+        <span role="columnheader">Criterio</span>
+        <span role="columnheader">Servicio empírico informal</span>
+        <span role="columnheader">Estándar INFA Soluciones</span>
+      </div>
+      {COMPARATIVA.map((r) => (
+        <div class="matriz__row" role="row" data-reveal>
+          <span role="cell" class="matriz__k">{r.criterio}</span>
+          <span role="cell" class="matriz__bad">{r.informal}</span>
+          <span role="cell" class="matriz__good">{r.infa}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+<style>
+  .matriz__table { margin-top: var(--s-12); border-top: var(--line); }
+  .matriz__row { display: grid; grid-template-columns: 0.7fr 1fr 1.3fr; gap: var(--s-6); padding: var(--s-6) 0; border-bottom: var(--line); align-items: baseline; }
+  .matriz__head { font: 500 var(--t-xs) var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--c-steel-dim); }
+  .matriz__k { font: 500 var(--t-sm) var(--f-mono); color: var(--c-steel-dim); }
+  .matriz__bad { color: #6b7280; text-decoration: line-through; text-decoration-color: rgb(255 85 0 / .4); }
+  .matriz__good { font-weight: 600; padding-left: var(--s-4); border-left: 2px solid var(--c-weld); }
+  @media (max-width: 720px) {
+    .matriz__head { display: none; }
+    .matriz__row { grid-template-columns: 1fr; gap: var(--s-2); }
+  }
+</style>

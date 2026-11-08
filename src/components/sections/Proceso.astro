@@ -1,0 +1,42 @@
+---
+import { PROCESO } from '@/data/content';
+---
+<section class="section section--light proc" aria-labelledby="proc-title">
+  <div class="shell proc__grid">
+    <div class="proc__side">
+      <p class="tag"><b>04</b> / Cómo trabajamos</p>
+      <h2 id="proc-title" data-split>Del plano<br />a la entrega.</h2>
+      <div class="proc__img px" data-reveal="clip">
+        <img src="/media/ia/plano.webp" alt="Plano técnico de un módulo de exhibición sobre la mesa de diseño" width="1800" height="1350" loading="lazy" decoding="async" />
+        <span class="badge-ai">Imagen referencial</span>
+      </div>
+    </div>
+    <ol class="proc__steps" data-proc>
+      <span class="proc__rail" aria-hidden="true"><i data-proc-fill></i></span>
+      {PROCESO.map((p) => (
+        <li data-reveal>
+          <span class="proc__n">{p.n}</span>
+          <div><h3>{p.t}</h3><p class="muted">{p.d}</p></div>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>
+<script>
+  import { gsap } from '@/scripts/motion';
+  const fill = document.querySelector('[data-proc-fill]');
+  if (fill) gsap.fromTo(fill, { scaleY: 0 }, { scaleY: 1, ease: 'none', scrollTrigger: { trigger: '[data-proc]', start: 'top 70%', end: 'bottom 60%', scrub: true } });
+</script>
+<style>
+  .proc__grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 6vw, 7rem); }
+  .proc__side { position: sticky; top: calc(var(--header-h) + 2rem); align-self: start; }
+  .proc__side h2 { margin-top: var(--s-4); }
+  .proc__img { position: relative; margin-top: var(--s-8); border-radius: var(--radius-lg); aspect-ratio: 4 / 3; }
+  .proc__steps { position: relative; list-style: none; margin: 0; padding: 0 0 0 clamp(2.5rem, 5vw, 4rem); display: grid; gap: clamp(2.5rem, 6vh, 5rem); padding-block: 2vh; }
+  .proc__rail { position: absolute; left: 12px; top: 0; bottom: 0; width: 2px; background: rgb(0 0 0 / .1); }
+  .proc__rail i { display: block; height: 100%; background: var(--c-weld); transform-origin: top; }
+  .proc__steps li { display: grid; grid-template-columns: auto 1fr; gap: var(--s-6); align-items: start; }
+  .proc__n { font: 850 clamp(2.6rem, 2rem + 3vw, 5rem)/0.9 var(--f-display); font-variation-settings: 'wdth' 110; color: transparent; -webkit-text-stroke: 1.5px var(--c-ink); }
+  .proc__steps h3 { margin-bottom: var(--s-2); }
+  @media (max-width: 860px) { .proc__grid { grid-template-columns: 1fr; } .proc__side { position: static; } }
+</style>

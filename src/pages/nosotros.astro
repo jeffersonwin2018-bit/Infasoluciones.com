@@ -1,0 +1,41 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/ui/PageHero.astro';
+import Intro from '@/components/sections/Intro.astro';
+import Matriz from '@/components/sections/Matriz.astro';
+import Confianza from '@/components/sections/Confianza.astro';
+import Proceso from '@/components/sections/Proceso.astro';
+import CTAFinal from '@/components/sections/CTAFinal.astro';
+import { breadcrumbSchema } from '@/lib/schema';
+import { publicWorks } from '@/lib/server/content';
+const s = Astro.locals.settings;
+const crumbs = [{ name: 'Inicio', path: '/' }, { name: 'Nosotros', path: '/nosotros' }];
+const taller = (await publicWorks()).filter((w) => w.category === 'taller').slice(0, 3);
+---
+<BaseLayout title="Nosotros — Mueblerías INFA, empresa familiar peruana" description="INFA (Mueblerías INFA) es una empresa familiar peruana que diseña, fabrica e instala mobiliario de exhibición, muebles a medida y estructuras metálicas desde su propio taller." schemas={[breadcrumbSchema(crumbs)]}>
+  <PageHero tag="Nosotros" title={s.about.title} lead={s.about.body} crumbs={crumbs} image="/media/ia/taller.webp" imageAi />
+  <Intro />
+  {taller.length > 0 && (
+    <section class="section"><div class="shell">
+      <p class="tag"><b>●</b> Nuestro taller, en fotos reales</p>
+      <ul class="nt" data-lb-group="taller">
+        {taller.map((w) => (
+          <li data-reveal><button type="button" data-lb data-cursor="Ver" data-src={w.src} data-title={w.title} data-meta={w.location}><img src={w.thumb} alt={w.title} width={w.w} height={w.h} loading="lazy" /></button><span class="muted">{w.title}</span></li>
+        ))}
+      </ul>
+    </div></section>
+  )}
+  <Matriz />
+  <Proceso />
+  <Confianza />
+  <CTAFinal />
+</BaseLayout>
+<script>import '@/scripts/lightbox';</script>
+<style>
+  .nt { list-style: none; padding: 0; margin: var(--s-8) 0 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-4); }
+  .nt button { display: block; width: 100%; padding: 0; border: 0; border-radius: 14px; overflow: hidden; aspect-ratio: 4 / 3; cursor: pointer; background: var(--c-charcoal-2); }
+  .nt img { width: 100%; height: 100%; object-fit: cover; transition: transform 1s var(--ease-out); }
+  .nt button:hover img { transform: scale(1.05); }
+  .nt span { display: block; margin-top: var(--s-2); font-size: var(--t-sm); }
+  @media (max-width: 700px) { .nt { grid-template-columns: 1fr; } }
+</style>

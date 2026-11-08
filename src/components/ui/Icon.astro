@@ -1,0 +1,16 @@
+---
+interface Props { name: 'whatsapp' | 'facebook' | 'instagram' | 'tiktok' | 'arrow' | 'arrow-r' | 'play' | 'close' | 'plus'; size?: number; class?: string }
+const { name, size = 20, class: cls } = Astro.props;
+const P: Record<Props['name'], string> = {
+  whatsapp: '<path fill="currentColor" d="M16.04 3C8.88 3 3.06 8.78 3.06 15.9c0 2.28.6 4.5 1.75 6.46L3 29l6.86-1.79a13.1 13.1 0 0 0 6.18 1.56h.01c7.15 0 12.97-5.79 12.97-12.9C29.02 8.78 23.2 3 16.04 3Zm7.6 18.3c-.32.9-1.86 1.72-2.57 1.79-.66.06-1.5.09-2.42-.15a22 22 0 0 1-2.2-.81c-3.86-1.66-6.38-5.54-6.57-5.8-.19-.25-1.57-2.08-1.57-3.97s.99-2.82 1.34-3.2c.35-.39.77-.48 1.02-.48h.74c.24 0 .56-.09.87.67.32.77 1.09 2.66 1.18 2.85.1.2.16.42.03.67-.13.26-.19.42-.38.64l-.58.67c-.19.19-.39.4-.17.79.22.38 1 1.64 2.14 2.66 1.47 1.3 2.71 1.71 3.1 1.9.38.2.6.16.83-.1.22-.25.96-1.11 1.21-1.5.26-.38.51-.32.87-.19.35.13 2.24 1.05 2.62 1.25.39.19.64.28.74.44.09.16.09.93-.23 1.83Z"/>',
+  facebook: '<path fill="currentColor" d="M18.2 29V17.4h3.9l.6-4.5h-4.5V10c0-1.3.4-2.2 2.2-2.2H23V3.8c-.4-.1-1.8-.2-3.4-.2-3.4 0-5.7 2.1-5.7 5.9v3.4H10v4.5h3.9V29h4.3Z"/>',
+  instagram: '<path fill="none" stroke="currentColor" stroke-width="2.4" d="M10 4h12a6 6 0 0 1 6 6v12a6 6 0 0 1-6 6H10a6 6 0 0 1-6-6V10a6 6 0 0 1 6-6Z"/><circle cx="16" cy="16" r="5.4" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="23" cy="9" r="1.6" fill="currentColor"/>',
+  tiktok: '<path fill="currentColor" d="M22.6 3h-4.4v17.5a3.9 3.9 0 1 1-3.9-3.9c.4 0 .8 0 1.1.1v-4.5a8.4 8.4 0 1 0 7.2 8.3v-8.7a10.5 10.5 0 0 0 5.9 1.8V9.2a6 6 0 0 1-5.9-6.2Z"/>',
+  arrow: '<path fill="none" stroke="currentColor" stroke-width="2.4" d="M9 23 23 9M11 9h12v12"/>',
+  'arrow-r': '<path fill="none" stroke="currentColor" stroke-width="2.4" d="M5 16h21M18 8l8 8-8 8"/>',
+  play: '<path fill="currentColor" d="M10 6v20l17-10z"/>',
+  close: '<path fill="none" stroke="currentColor" stroke-width="2.4" d="m8 8 16 16M24 8 8 24"/>',
+  plus: '<path fill="none" stroke="currentColor" stroke-width="2.4" d="M16 6v20M6 16h20"/>',
+};
+---
+<svg class={cls} width={size} height={size} viewBox="0 0 32 32" aria-hidden="true" set:html={P[name]} />

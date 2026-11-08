@@ -1,0 +1,27 @@
+---
+/** FAQ en HTML estático con <details> (no depende de JS, a diferencia del sitio actual). */
+import { FAQS } from '@/data/content';
+const visible = import.meta.env.DEV ? FAQS : FAQS.filter((f) => !f.a.includes('[COMPLETAR]'));
+---
+<section class="section faq" aria-labelledby="faq-title">
+  <div class="shell faq__grid">
+    <div><p class="tag"><b>06</b> / Preguntas</p><h2 id="faq-title" data-split>Antes de cotizar.</h2></div>
+    <div>
+      {visible.map((f) => (
+        <details>
+          <summary>{f.q}</summary>
+          <p>{f.a}</p>
+        </details>
+      ))}
+    </div>
+  </div>
+</section>
+<style>
+  .faq__grid { display: grid; grid-template-columns: 1fr 2fr; gap: var(--s-12); }
+  details { border-bottom: var(--line); }
+  summary { cursor: pointer; padding: var(--s-6) 0; font-weight: 600; font-size: var(--t-md); list-style: none; display: flex; justify-content: space-between; gap: var(--s-4); }
+  summary::after { content: '+'; color: var(--c-weld); font-family: var(--f-mono); }
+  details[open] summary::after { content: '−'; }
+  details p { color: var(--c-steel-dim); padding-bottom: var(--s-6); }
+  @media (max-width: 800px) { .faq__grid { grid-template-columns: 1fr; } }
+</style>

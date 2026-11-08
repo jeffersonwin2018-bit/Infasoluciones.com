@@ -1,0 +1,22 @@
+---
+import { CLIENTES } from '@/config/site';
+---
+<section class="cli" aria-label="Tiendas donde hemos instalado">
+  <p class="shell tag">Hemos fabricado e instalado mobiliario en tiendas como</p>
+  <div class="cli__row" data-marquee>
+    <ul class="cli__track" data-track>
+      {CLIENTES.map((c) => <li>{c}<span aria-hidden="true">✦</span></li>)}
+    </ul>
+  </div>
+</section>
+<style>
+  .cli { padding-block: var(--s-16) var(--s-12); border-bottom: var(--line); overflow: hidden; background: #050507; }
+  .cli .tag { margin-bottom: var(--s-8); }
+  .cli__row { overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+  .cli__track { display: flex; width: max-content; list-style: none; margin: 0; padding: 0; will-change: transform; }
+  .cli__track li { display: flex; align-items: center; gap: clamp(1.5rem, 3vw, 3rem); padding-right: clamp(1.5rem, 3vw, 3rem); white-space: nowrap;
+    font: 800 clamp(2.4rem, 6vw, 6rem)/1 var(--f-display); font-variation-settings: 'wdth' 112; letter-spacing: -.03em; color: transparent; -webkit-text-stroke: 1px rgb(255 255 255 / .45); transition: color .4s; }
+  .cli__track li:hover { color: var(--c-steel); }
+  .cli__track span { font-size: .35em; color: var(--c-weld); -webkit-text-stroke: 0; }
+  :global(html:not(.js)) .cli__track, .cli__track { flex-wrap: nowrap; }
+</style>

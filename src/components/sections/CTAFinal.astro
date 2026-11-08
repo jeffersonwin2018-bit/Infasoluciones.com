@@ -1,0 +1,30 @@
+---
+import { waLink } from '@/lib/whatsapp';
+import Icon from '@/components/ui/Icon.astro';
+import { SOCIALS } from '@/config/site';
+const s = Astro.locals.settings;
+---
+<section class="cta" aria-labelledby="cta-title">
+  <div class="shell cta__in">
+    <h2 id="cta-title" class="cta__t" data-split>{s.cta.title}</h2>
+    <p class="cta__p muted" data-reveal>{s.cta.body}</p>
+    <a class="cta__btn" data-magnetic href={waLink('Hola INFA 👋, tengo un proyecto y quisiera cotizar.')} target="_blank" rel="noopener">
+      <Icon name="whatsapp" size={56} />
+      <span>Escríbenos<br />por WhatsApp</span>
+    </a>
+    <ul class="cta__soc">
+      {SOCIALS.filter((x) => x.key !== 'whatsapp').map((x) => <li><a href={x.href} target="_blank" rel="noopener"><Icon name={x.key as any} size={18} /> Síguenos en {x.label}</a></li>)}
+    </ul>
+  </div>
+</section>
+<style>
+  .cta { padding-block: var(--section-y); text-align: center; background: radial-gradient(60% 60% at 50% 60%, color-mix(in oklab, var(--c-weld) 22%, transparent), transparent 70%), var(--c-charcoal); overflow: hidden; }
+  .cta__in { display: grid; justify-items: center; }
+  .cta__t { font-size: clamp(2.6rem, 1rem + 6vw, 7.5rem); max-width: 13ch; }
+  .cta__p { max-width: 46ch; margin-inline: auto; }
+  .cta__btn { display: grid; place-items: center; gap: var(--s-3); width: clamp(220px, 26vw, 320px); aspect-ratio: 1; margin-top: var(--s-12); border-radius: 50%; background: var(--c-wa); color: #05290f; text-decoration: none; font: 800 var(--t-lg)/1.05 var(--f-display); box-shadow: 0 30px 80px -20px rgb(37 211 102 / .7); transition: box-shadow .5s; }
+  .cta__btn:hover { box-shadow: 0 40px 100px -10px rgb(37 211 102 / .95); }
+  .cta__soc { list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: var(--s-6); padding: 0; margin: var(--s-12) 0 0; }
+  .cta__soc a { display: inline-flex; align-items: center; gap: 8px; color: var(--c-steel-dim); text-decoration: none; font-size: var(--t-sm); }
+  .cta__soc a:hover { color: var(--c-steel); }
+</style>

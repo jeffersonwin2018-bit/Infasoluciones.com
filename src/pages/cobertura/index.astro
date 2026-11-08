@@ -1,0 +1,19 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/ui/PageHero.astro';
+import { COBERTURA } from '@/data/content';
+import { SITE } from '@/config/site';
+---
+<BaseLayout title="Cobertura — Lima, Arequipa y todo el Perú | INFA" description="INFA fabrica en taller e instala en Arequipa, Lima Metropolitana, Huaral, Cañete, Áncash y otras provincias del Perú.">
+  <PageHero tag="Cobertura" title="Fabricamos en taller. Instalamos en todo el Perú." lead="Trasladamos módulos, muebles y estructuras e instalamos con nuestro propio equipo." image="/media/obras/traslado-modulos.webp" />
+  <section class="section"><div class="shell">
+    <ul class="cov">{COBERTURA.map((c) => <li><a href={`/cobertura/${c.slug}`}><strong>{c.nombre}</strong><span>{c.foco}</span></a></li>)}</ul>
+    <p style="margin-top:2rem"><a class="btn btn--ghost" href={SITE.maps} target="_blank" rel="noopener">Ver taller en Google Maps ↗</a></p>
+  </div></section>
+</BaseLayout>
+<style>
+  .cov { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1px; background: var(--c-charcoal-3); border: var(--line); }
+  .cov a { display: grid; gap: var(--s-2); padding: var(--s-8); background: var(--c-charcoal); text-decoration: none; min-height: 160px; }
+  .cov a:hover { background: var(--c-charcoal-2); }
+  .cov span { color: var(--c-steel-dim); font-size: var(--t-sm); }
+</style>

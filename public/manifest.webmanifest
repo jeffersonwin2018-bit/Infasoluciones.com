@@ -1,0 +1,13 @@
+{
+  "name": "INFA — Mobiliario de exhibición y muebles a medida",
+  "short_name": "INFA",
+  "lang": "es-PE",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0c10",
+  "theme_color": "#0b0c10",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "/media/brand/logo-infa.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

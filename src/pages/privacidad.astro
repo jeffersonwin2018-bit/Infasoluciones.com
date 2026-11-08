@@ -1,0 +1,13 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/ui/PageHero.astro';
+import { SITE } from '@/config/site';
+---
+<BaseLayout title="Política de privacidad" description="Cómo INFA trata los datos que compartes al solicitar una cotización.">
+  <PageHero tag="Legal" title="Política de privacidad" />
+  <section class="section"><div class="shell">
+    <p>Este sitio no guarda en servidor los datos del formulario: el cotizador arma un mensaje que tú decides enviar por WhatsApp a {SITE.name}.</p>
+    <p>Responsable: {SITE.legalName}. Los datos que nos envías por WhatsApp (nombre, teléfono, fotos o medidas de tu proyecto) se usan solo para preparar y dar seguimiento a tu cotización, y no se comparten con terceros. Puedes pedir que los eliminemos en cualquier momento escribiéndonos al {SITE.phoneDisplay}, conforme a la Ley N.º 29733 de Protección de Datos Personales.</p>
+    <p>Si activas la música ambiental, el sitio recuerda esa preferencia en tu navegador (almacenamiento local); no usamos cookies de publicidad.</p>
+  </div></section>
+</BaseLayout>

@@ -1,0 +1,105 @@
+---
+/**
+ * Cotizador express → mensaje formateado a WhatsApp.
+ * Sin servidor: no se guardan datos. Funciona sin JS como enlace directo (fallback).
+ * Fase 2 (opcional): estimación de rango de precio por m² — SOLO con tabla de precios
+ * aprobada por INFA, nunca con precios inventados.
+ */
+import { SERVICES, shortTitle } from '@/data/services';
+import { COBERTURA } from '@/data/content';
+import { waLink } from '@/lib/whatsapp';
+---
+<section class="section cot" id="cotizar" aria-labelledby="cot-title">
+  <div class="shell cot__grid">
+    <div>
+      <p class="tag"><b>05</b> / Cotizador express</p>
+      <h2 id="cot-title" data-split>Cuéntanos la obra.<br />Te respondemos con números.</h2>
+      <p class="cot__lead">Selecciona el tipo de obra, medidas aproximadas y ubicación. Se arma un mensaje ordenado para WhatsApp; ahí puedes adjuntar fotos o planos.</p>
+      <p class="cot__note">No guardamos tus datos: el mensaje solo se envía cuando tú lo confirmas en WhatsApp.</p>
+    </div>
+
+    <form class="cot__form" id="cot-form" action={waLink()} method="get" target="_blank" novalidate>
+      <label>Tipo de obra
+        <select name="tipo" required>
+          {SERVICES.map((s) => <option value={shortTitle(s)}>{shortTitle(s)}</option>)}
+          <option value="Otro">Otro</option>
+        </select>
+      </label>
+      <div class="cot__row">
+        <label>Ancho aprox. (m)<input name="ancho" inputmode="decimal" placeholder="5.0" /></label>
+        <label>Alto / largo aprox. (m)<input name="alto" inputmode="decimal" placeholder="2.6" /></label>
+      </div>
+      <div class="cot__row">
+        <label>Provincia
+          <select name="provincia" required>
+            {COBERTURA.map((c) => <option>{c.nombre}</option>)}
+            <option>Otra provincia</option>
+          </select>
+        </label>
+        <label>Distrito<input name="distrito" autocomplete="address-level3" placeholder="Cayma, Surco…" /></label>
+      </div>
+      <label>Plazo
+        <select name="plazo"><option>Coordinable</option><option>Este mes</option><option>Urgente</option></select>
+      </label>
+      <fieldset class="cot__chk">
+        <label><input type="checkbox" name="factura" /> Necesito factura (RUC)</label>
+      </fieldset>
+      <div class="cot__row">
+        <label>Nombre<input name="nombre" autocomplete="name" /></label>
+        <label>Empresa (opcional)<input name="empresa" autocomplete="organization" /></label>
+      </div>
+      <label>Detalle<textarea name="detalle" rows="3" placeholder="Material, acabado, si tienes planos…"></textarea></label>
+      <output class="cot__preview" id="cot-preview" aria-live="polite"></output>
+      <button class="btn btn--wa btn--lg" type="submit">Enviar por WhatsApp ↗</button>
+    </form>
+  </div>
+</section>
+
+<script>
+  import { SITE } from '@/config/site';
+  import { quoteMessage } from '@/lib/whatsapp';
+  const form = document.getElementById('cot-form') as HTMLFormElement | null;
+  const preview = document.getElementById('cot-preview');
+  const build = () => {
+    if (!form) return '';
+    const f = new FormData(form);
+    const ancho = String(f.get('ancho') || ''), alto = String(f.get('alto') || '');
+    return quoteMessage({
+      tipo: String(f.get('tipo')),
+      medidas: ancho || alto ? `${ancho || '?'} × ${alto || '?'} m` : '',
+      provincia: String(f.get('provincia')),
+      distrito: String(f.get('distrito') || ''),
+      plazo: String(f.get('plazo') || ''),
+      factura: f.get('factura') === 'on',
+      nombre: String(f.get('nombre') || ''),
+      empresa: String(f.get('empresa') || ''),
+      detalle: String(f.get('detalle') || ''),
+    });
+  };
+  form?.addEventListener('input', () => { if (preview) preview.textContent = build(); });
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    window.open(`https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(build())}`, '_blank', 'noopener');
+    // Medición de conversión (si conectas GA4 / Plausible): window.plausible?.('cotizacion_whatsapp')
+  });
+</script>
+
+<style>
+  .cot { background: var(--c-charcoal-2); border-top: var(--line); }
+  .cot__form { padding: clamp(1.2rem, 3vw, 2.5rem); border-radius: var(--radius-lg); background: var(--c-charcoal); border: var(--line); }
+  .cot__grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: var(--s-16); }
+  .cot__lead { color: var(--c-steel-dim); }
+  .cot__note { font: 500 var(--t-xs)/1.6 var(--f-mono); color: var(--c-steel-dim); border-left: 2px solid var(--c-weld); padding-left: var(--s-3); }
+  .cot__form { display: grid; gap: var(--s-4); }
+  .cot__row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-4); }
+  label { display: grid; gap: 6px; font: 500 var(--t-xs) var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--c-steel-dim); }
+  input, select, textarea { width: 100%; padding: 14px; background: var(--c-charcoal); color: var(--c-steel); border: var(--line); border-radius: 12px; font: 400 var(--t-md) var(--f-body); text-transform: none; letter-spacing: 0; }
+  input:focus, select:focus, textarea:focus { border-color: var(--c-weld); outline: none; }
+  .cot__chk { border: 0; padding: 0; margin: 0; }
+  .cot__chk label { display: flex; align-items: center; gap: var(--s-2); }
+  .cot__chk input { width: auto; accent-color: var(--c-weld); }
+  .cot__preview { white-space: pre-wrap; font: 400 var(--t-xs)/1.6 var(--f-mono); color: var(--c-steel-dim); }
+  .cot__preview:not(:empty) { padding: var(--s-4); border: 1px dashed var(--c-charcoal-3); }
+  @media (max-width: 900px) { .cot__grid { grid-template-columns: 1fr; gap: var(--s-8); } }
+  @media (max-width: 520px) { .cot__row { grid-template-columns: 1fr; } }
+</style>

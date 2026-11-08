@@ -1,0 +1,90 @@
+---
+/** Lista de servicios: en escritorio, la imagen flota y sigue al cursor; en móvil, tarjetas con foto. */
+import { SERVICES, DIVISIONS, shortTitle } from '@/data/services';
+import Icon from '@/components/ui/Icon.astro';
+interface Props { heading?: boolean }
+const { heading = true } = Astro.props;
+---
+<section class="section srv" id="servicios" aria-labelledby="srv-title">
+  <div class="shell">
+    {heading && (
+      <div class="sec-head">
+        <div>
+          <p class="tag"><b>03</b> / Especialidades</p>
+          <h2 id="srv-title" data-split>Un solo taller.<br />Nueve especialidades.</h2>
+        </div>
+        <p class="muted">Exhibición comercial, carpintería, melamina, metalmecánica y mantenimiento: un solo responsable de principio a fin.</p>
+      </div>
+    )}
+    <ol class="srv__list" data-srv>
+      {SERVICES.map((s, i) => (
+        <li data-reveal style={`--d:${(i % 4) * 0.05}s`}>
+          <a href={`/servicios/${s.slug}`} data-img={s.image} data-real={s.imageIsReal ? '1' : ''}>
+            <span class="srv__n">{String(i + 1).padStart(2, '0')}</span>
+            <span class="srv__t">{shortTitle(s)}</span>
+            <span class="srv__d">{DIVISIONS[s.division].label}</span>
+            <span class="srv__m">
+              <img src={s.image.replace('.webp', '-t.webp')} alt="" width="820" height="615" loading="lazy" decoding="async" />
+              {!s.imageIsReal && <span class="badge-ai">Imagen referencial</span>}
+            </span>
+            <span class="srv__a"><Icon name="arrow" size={26} /></span>
+          </a>
+        </li>
+      ))}
+    </ol>
+  </div>
+  <div class="srv__float" aria-hidden="true"><img alt="" /><span class="badge-ai">Imagen referencial</span></div>
+</section>
+
+<script>
+  import { gsap } from '@/scripts/motion';
+  const list = document.querySelector<HTMLElement>('[data-srv]');
+  const fl = document.querySelector<HTMLElement>('.srv__float');
+  const img = fl?.querySelector('img');
+  if (list && fl && img && matchMedia('(hover: hover) and (pointer: fine) and (min-width: 861px)').matches) {
+    const x = gsap.quickTo(fl, 'x', { duration: 0.6, ease: 'power3' }), y = gsap.quickTo(fl, 'y', { duration: 0.6, ease: 'power3' });
+    const rot = gsap.quickTo(fl, 'rotation', { duration: 0.8, ease: 'power3' });
+    let lastX = 0;
+    list.addEventListener('pointermove', (e) => { x(e.clientX); y(e.clientY); rot(Math.max(-8, Math.min(8, (e.clientX - lastX) * 0.6))); lastX = e.clientX; });
+    list.querySelectorAll<HTMLAnchorElement>('a').forEach((a) => {
+      a.addEventListener('pointerenter', () => {
+        img.src = a.dataset.img!.replace('.webp', '-t.webp');
+        fl.classList.toggle('is-real', !!a.dataset.real);
+        fl.classList.add('is-on');
+      });
+    });
+    list.addEventListener('pointerleave', () => fl.classList.remove('is-on'));
+  }
+</script>
+
+<style>
+  .srv__list { list-style: none; margin: 0; padding: 0; border-top: var(--line); }
+  .srv__list a { position: relative; display: grid; grid-template-columns: 4rem 1fr auto 3rem; align-items: center; gap: var(--s-6); padding: clamp(1.2rem, 2.6vw, 2.2rem) 0; border-bottom: var(--line); text-decoration: none; overflow: hidden; }
+  .srv__list a::before { content: ''; position: absolute; inset: 0; background: var(--c-weld); transform: scaleY(0); transform-origin: bottom; transition: transform .6s var(--ease-out); z-index: -1; }
+  .srv__list a:hover::before { transform: scaleY(1); }
+  .srv__list li { position: relative; isolation: isolate; }
+  .srv__n { font: 500 var(--t-xs) var(--f-mono); color: var(--c-steel-dim); padding-left: var(--s-2); transition: color .4s; }
+  .srv__t { font: 760 clamp(1.6rem, 1rem + 2.6vw, 3.6rem)/1 var(--f-display); font-variation-settings: 'wdth' 106; letter-spacing: -.03em; transition: transform .6s var(--ease-out); }
+  .srv__d { font: 500 var(--t-xs) var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--c-steel-dim); transition: color .4s; }
+  .srv__a { justify-self: end; padding-right: var(--s-2); transition: transform .5s var(--ease-out); }
+  .srv__list a:hover .srv__t { transform: translateX(14px); }
+  .srv__list a:hover .srv__n, .srv__list a:hover .srv__d { color: #fff; }
+  .srv__list a:hover .srv__a { transform: rotate(45deg); }
+  .srv__m { display: none; }
+
+  .srv__float { position: fixed; left: 0; top: 0; z-index: 60; width: 340px; aspect-ratio: 4 / 3; margin: -170px 0 0 40px; border-radius: 14px; overflow: hidden; pointer-events: none; opacity: 0; scale: .7; transition: opacity .35s, scale .5s var(--ease-out); box-shadow: 0 30px 80px rgb(0 0 0 / .5); }
+  .srv__float.is-on { opacity: 1; scale: 1; }
+  .srv__float img { width: 100%; height: 100%; object-fit: cover; }
+  .srv__float.is-real .badge-ai { display: none; }
+
+  @media (max-width: 860px) {
+    .srv__list { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-4); border: 0; }
+    .srv__list a { grid-template-columns: 1fr; gap: var(--s-2); padding: 0 0 var(--s-4); border: 0; }
+    .srv__list a::before { display: none; }
+    .srv__m { display: block; position: relative; order: -1; border-radius: 12px; overflow: hidden; aspect-ratio: 4 / 3; margin-bottom: var(--s-2); }
+    .srv__m img { width: 100%; height: 100%; object-fit: cover; }
+    .srv__t { font-size: 1.15rem; }
+    .srv__n, .srv__a { display: none; }
+  }
+  @media (max-width: 420px) { .srv__list { grid-template-columns: 1fr; } }
+</style>

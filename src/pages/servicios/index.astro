@@ -1,0 +1,19 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/ui/PageHero.astro';
+import Servicios from '@/components/sections/Servicios.astro';
+import Cotizador from '@/components/sections/Cotizador.astro';
+import CTAFinal from '@/components/sections/CTAFinal.astro';
+import { breadcrumbSchema } from '@/lib/schema';
+const crumbs = [{ name: 'Inicio', path: '/' }, { name: 'Servicios', path: '/servicios' }];
+---
+<BaseLayout
+  title="Servicios: exhibición comercial, muebles a medida y metalmecánica | INFA"
+  description="Módulos de exhibición para tiendas, implementación de locales, muebles de melamina, carpintería en madera, estructuras metálicas, techos de aluzinc, portones, escaleras y mantenimiento."
+  schemas={[breadcrumbSchema(crumbs)]}
+>
+  <PageHero tag="Servicios" title="Todo lo que fabricamos, en un solo taller." lead="Desde un módulo de exhibición para una gran tienda hasta la cocina de tu casa: diseñamos, fabricamos e instalamos." crumbs={crumbs} image="/media/obras/muro-led-curacao-mall.webp" />
+  <Servicios heading={false} />
+  <Cotizador />
+  <CTAFinal />
+</BaseLayout>

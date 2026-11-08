@@ -1,0 +1,100 @@
+---
+/** Obras reales destacadas (elegidas en /admin con la estrella) en una galería horizontal que avanza con el scroll. */
+import type { Work } from '@/data/works';
+import { WORK_CATEGORIES } from '@/data/works';
+import Icon from '@/components/ui/Icon.astro';
+import { fecha } from '@/lib/format';
+interface Props { works: Work[]; total: number }
+const { works, total } = Astro.props;
+---
+<section class="obr" id="obras" aria-labelledby="obr-title" data-hscroll>
+  <div class="obr__pin">
+    <div class="shell obr__head">
+      <div>
+        <p class="tag"><b>02</b> / Obras reales</p>
+        <h2 id="obr-title" data-split>Lo que ya está<br />en las tiendas.</h2>
+      </div>
+      <p class="muted">Fotos reales de módulos que diseñamos, fabricamos e instalamos. Toca cualquiera para verla en grande.</p>
+    </div>
+    <div class="obr__track" data-htrack data-lb-group="destacadas">
+      {works.map((w, i) => (
+        <figure class:list={['obr__card', `obr__card--${i % 3}`]}>
+          <button class="obr__media" type="button" data-cursor="Ver" data-lb data-src={w.src} data-title={w.title} data-meta={`${WORK_CATEGORIES[w.category]?.label ?? ''}${w.location ? ' · ' + w.location : ''} · ${fecha(w.date)}`} aria-label={`Ver foto: ${w.title}`}>
+            <span class="badge-real">Obra real</span>
+            <img src={w.thumb} srcset={`${w.thumb} 720w, ${w.src} 1800w`} sizes="(max-width: 760px) 80vw, 40vw" alt={`${w.title}${w.location ? ' — ' + w.location : ''}`} width={w.w} height={w.h} loading={i < 2 ? 'eager' : 'lazy'} decoding="async" />
+          </button>
+          <figcaption>
+            <span class="tag">{String(i + 1).padStart(2, '0')} · {w.location || WORK_CATEGORIES[w.category]?.label}</span>
+            <strong>{w.title}</strong>
+          </figcaption>
+        </figure>
+      ))}
+      <a class="obr__more" href="/proyectos" data-cursor="Abrir">
+        <span>Ver las {total} obras</span>
+        <Icon name="arrow-r" size={48} />
+      </a>
+    </div>
+    <div class="shell obr__prog" aria-hidden="true"><i data-hprog></i></div>
+  </div>
+</section>
+
+<script>
+  import { gsap, ScrollTrigger, reduce } from '@/scripts/motion';
+  const sec = document.querySelector<HTMLElement>('[data-hscroll]');
+  const track = sec?.querySelector<HTMLElement>('[data-htrack]');
+  const prog = sec?.querySelector<HTMLElement>('[data-hprog]');
+  const mm = gsap.matchMedia();
+  mm.add('(min-width: 861px)', () => {
+    if (!sec || !track || reduce) return;
+    const dist = () => track.scrollWidth - innerWidth + 40;
+    const tween = gsap.to(track, {
+      x: () => -dist(), ease: 'none',
+      scrollTrigger: {
+        trigger: sec, pin: true, start: 'top top', end: () => '+=' + dist(), scrub: 0.6, invalidateOnRefresh: true,
+        onUpdate: (st) => prog && (prog.style.transform = `scaleX(${st.progress})`),
+      },
+    });
+    // Ligero parallax de cada imagen dentro de su tarjeta
+    track.querySelectorAll('img').forEach((img) => {
+      gsap.fromTo(img, { xPercent: -6 }, { xPercent: 6, ease: 'none', scrollTrigger: { trigger: img.closest('figure'), containerAnimation: tween, start: 'left right', end: 'right left', scrub: true } });
+    });
+    return () => ScrollTrigger.refresh();
+  });
+</script>
+<script>
+  import '@/scripts/lightbox';
+</script>
+
+<style>
+  .obr { position: relative; background: var(--c-charcoal); overflow: hidden; }
+  .obr__pin { min-height: 100svh; display: flex; flex-direction: column; justify-content: center; gap: clamp(1.5rem, 4vh, 3rem); padding-block: calc(var(--header-h) + 2vh) 4vh; }
+  .obr__head { display: flex; justify-content: space-between; align-items: end; gap: var(--s-8); flex-wrap: wrap; }
+  .obr__head h2 { margin: var(--s-4) 0 0; }
+  .obr__head p { max-width: 36ch; margin: 0; }
+  .obr__track { display: flex; align-items: flex-start; gap: clamp(1rem, 2.4vw, 2.4rem); padding-inline: var(--gutter); width: max-content; will-change: transform; }
+  .obr__card { margin: 0; flex: none; width: clamp(280px, 34vw, 560px); }
+  .obr__card--1 { width: clamp(240px, 26vw, 420px); margin-top: 6vh; }
+  .obr__card--2 { width: clamp(260px, 30vw, 480px); margin-top: 2vh; }
+  .obr__media { position: relative; display: block; width: 100%; padding: 0; border: 0; overflow: hidden; border-radius: var(--radius-lg); background: var(--c-charcoal-2); aspect-ratio: 4 / 3.1; cursor: pointer; }
+  .obr__card--1 .obr__media { aspect-ratio: 3 / 4; }
+  .obr__media img { width: 112%; max-width: none; height: 100%; margin-left: -6%; object-fit: cover; transition: transform 1.2s var(--ease-out), filter .6s; filter: saturate(.92); }
+  .obr__media:hover img { transform: scale(1.06); filter: saturate(1.1); }
+  .obr__card figcaption { display: grid; gap: 6px; padding-top: var(--s-4); }
+  .obr__card strong { font-size: var(--t-md); font-weight: 650; }
+  .obr__more { flex: none; align-self: center; display: grid; place-items: center; gap: var(--s-4); width: clamp(220px, 22vw, 320px); aspect-ratio: 1; border-radius: 50%; border: 1px solid rgb(255 255 255 / .2); text-decoration: none; text-align: center; font: 750 var(--t-lg)/1.05 var(--f-display); transition: background .5s, color .5s, border-color .5s; }
+  .obr__more span { max-width: 9ch; }
+  .obr__more:hover { background: var(--c-weld); border-color: var(--c-weld); }
+  .obr__prog { height: 1px; background: rgb(255 255 255 / .12); }
+  .obr__prog i { display: block; height: 100%; background: var(--c-weld); transform-origin: left; transform: scaleX(0); }
+
+  @media (max-width: 860px) {
+    .obr__pin { min-height: 0; padding-block: var(--section-y); }
+    .obr__track { width: auto; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: var(--s-4); scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .obr__track::-webkit-scrollbar { display: none; }
+    .obr__card, .obr__card--1, .obr__card--2 { width: 78vw; margin-top: 0; scroll-snap-align: center; }
+    .obr__card--1 .obr__media { aspect-ratio: 4 / 3.1; }
+    .obr__media img { width: 100%; margin: 0; }
+    .obr__more { width: 60vw; scroll-snap-align: center; }
+    .obr__prog { display: none; }
+  }
+</style>

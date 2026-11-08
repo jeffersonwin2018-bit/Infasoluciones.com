@@ -1,0 +1,124 @@
+---
+import { SITE, NAV, SOCIALS } from '@/config/site';
+import Logo from '@/components/ui/Logo.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { waLink } from '@/lib/whatsapp';
+const path = Astro.url.pathname;
+const social = SOCIALS.filter((s) => s.key !== 'whatsapp');
+---
+<header class="hdr" data-hdr>
+  <div class="shell hdr__in">
+    <a class="hdr__brand" href="/" aria-label={`${SITE.brand}, inicio`}>
+      <Logo size={42} />
+      <span class="hdr__name">INFA<small>Mueblerías · Soluciones</small></span>
+    </a>
+
+    <nav class="hdr__nav" aria-label="Principal">
+      {NAV.map((n) => <a href={n.href} aria-current={path.startsWith(n.href) ? 'page' : undefined}><span data-txt={n.label}>{n.label}</span></a>)}
+    </nav>
+
+    <div class="hdr__tools">
+      <ul class="hdr__social" aria-label="Redes sociales">
+        {social.map((s) => <li><a href={s.href} target="_blank" rel="noopener" aria-label={s.label}><Icon name={s.key as any} size={17} /></a></li>)}
+      </ul>
+      <button class="sound" type="button" data-sound aria-pressed="false" aria-label="Activar música ambiental" title="Música ambiental">
+        <span class="sound__bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span class="sound__lbl">Sonido</span>
+      </button>
+      <a class="btn btn--weld hdr__cta" href={waLink('Hola INFA, quisiera cotizar un proyecto.')} target="_blank" rel="noopener">Cotizar</a>
+      <button class="hdr__burger" type="button" aria-expanded="false" aria-controls="menu" aria-label="Abrir menú"><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+
+<div class="menu" id="menu" aria-hidden="true">
+  <nav class="shell menu__in" aria-label="Menú móvil">
+    <ol class="menu__links">
+      <li><a href="/"><small>00</small>Inicio</a></li>
+      {NAV.map((n, i) => <li><a href={n.href}><small>{String(i + 1).padStart(2, '0')}</small>{n.label}</a></li>)}
+    </ol>
+    <div class="menu__foot">
+      <a class="btn btn--wa btn--lg" href={waLink()} target="_blank" rel="noopener"><Icon name="whatsapp" size={22} /> Escríbenos por WhatsApp</a>
+      <ul class="menu__social">
+        {social.map((s) => <li><a href={s.href} target="_blank" rel="noopener"><Icon name={s.key as any} size={20} /> {s.label}</a></li>)}
+      </ul>
+    </div>
+  </nav>
+</div>
+
+<script>
+  const btn = document.querySelector<HTMLButtonElement>('.hdr__burger');
+  const menu = document.getElementById('menu');
+  const setMenu = (open: boolean) => {
+    btn?.setAttribute('aria-expanded', String(open));
+    menu?.setAttribute('aria-hidden', String(!open));
+    document.documentElement.classList.toggle('menu-open', open);
+    (window as any).__lenis?.[open ? 'stop' : 'start']();
+  };
+  btn?.addEventListener('click', () => setMenu(btn.getAttribute('aria-expanded') !== 'true'));
+  menu?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setMenu(false)));
+  addEventListener('keydown', (e) => e.key === 'Escape' && setMenu(false));
+
+  const hdr = document.querySelector<HTMLElement>('[data-hdr]');
+  let last = 0;
+  addEventListener('scroll', () => {
+    const y = scrollY;
+    hdr?.classList.toggle('is-scrolled', y > 30);
+    hdr?.classList.toggle('is-hidden', y > 400 && y > last && !document.documentElement.classList.contains('menu-open'));
+    last = y;
+  }, { passive: true });
+</script>
+
+<style>
+  .hdr { position: fixed; inset: 0 0 auto; z-index: 80; height: var(--header-h); transition: transform .6s var(--ease-out), background .4s, border-color .4s; border-bottom: 1px solid transparent; }
+  .hdr.is-scrolled { background: rgb(11 12 16 / .72); backdrop-filter: blur(18px) saturate(1.4); border-color: rgb(255 255 255 / .06); }
+  .hdr.is-hidden { transform: translateY(-100%); }
+  .hdr__in { height: 100%; display: flex; align-items: center; gap: var(--s-6); }
+  .hdr__brand { display: flex; align-items: center; gap: var(--s-3); text-decoration: none; position: relative; z-index: 2; }
+  .hdr__name { font: 850 1.25rem/0.9 var(--f-display); font-variation-settings: 'wdth' 118; letter-spacing: .01em; }
+  .hdr__name small { display: block; margin-top: 3px; font: 500 .58rem/1.3 var(--f-mono); letter-spacing: .18em; text-transform: uppercase; color: var(--c-steel-dim); }
+  .hdr__nav { margin-inline: auto; display: flex; gap: clamp(1rem, 2.4vw, 2.4rem); }
+  .hdr__nav a { position: relative; overflow: hidden; display: block; height: 1.4em; text-decoration: none; font-size: var(--t-sm); font-weight: 550; color: var(--c-steel-dim); }
+  .hdr__nav a span { display: block; transition: transform .5s var(--ease-out); }
+  .hdr__nav a span::after { content: attr(data-txt); position: absolute; left: 0; top: 100%; color: var(--c-steel); }
+  .hdr__nav a:hover span { transform: translateY(-100%); }
+  .hdr__nav a[aria-current] { color: var(--c-steel); }
+  .hdr__nav a[aria-current]::before { content: ''; position: absolute; left: 0; bottom: 0; width: 100%; height: 1px; background: var(--c-weld); }
+  .hdr__tools { display: flex; align-items: center; gap: var(--s-3); position: relative; z-index: 2; }
+  .hdr__social { display: flex; gap: 2px; list-style: none; margin: 0; padding: 0; }
+  .hdr__social a { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; color: var(--c-steel-dim); transition: color .3s, background .3s; }
+  .hdr__social a:hover { color: #fff; background: rgb(255 255 255 / .08); }
+  .hdr__cta { min-height: 44px; padding: 0 var(--s-6); }
+
+  .sound { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border: 1px solid rgb(255 255 255 / .14); border-radius: 99px; background: none; color: var(--c-steel-dim); font: 500 var(--t-xs) var(--f-mono); letter-spacing: .1em; text-transform: uppercase; cursor: pointer; }
+  .sound:hover, .sound[aria-pressed='true'] { color: var(--c-steel); border-color: rgb(255 255 255 / .35); }
+  .sound__bars { display: flex; align-items: end; gap: 2px; height: 14px; }
+  .sound__bars i { width: 2px; height: 3px; background: currentColor; border-radius: 2px; transition: height .3s; }
+  .sound[aria-pressed='true'] .sound__bars i { animation: eq 1s ease-in-out infinite; background: var(--c-weld); }
+  .sound__bars i:nth-child(2) { animation-delay: -.3s !important; } .sound__bars i:nth-child(3) { animation-delay: -.6s !important; } .sound__bars i:nth-child(4) { animation-delay: -.15s !important; }
+  @keyframes eq { 0%, 100% { height: 3px; } 50% { height: 14px; } }
+
+  .hdr__burger { display: none; width: 46px; height: 46px; background: rgb(255 255 255 / .06); border: 1px solid rgb(255 255 255 / .12); border-radius: 50%; cursor: pointer; }
+  .hdr__burger span { display: block; width: 18px; height: 1.5px; margin: 5px auto; background: var(--c-steel); transition: transform .4s var(--ease-out); }
+  :global(.menu-open) .hdr__burger span:first-child { transform: translateY(3.3px) rotate(45deg); }
+  :global(.menu-open) .hdr__burger span:last-child { transform: translateY(-3.3px) rotate(-45deg); }
+
+  .menu { position: fixed; inset: 0; z-index: 70; background: var(--c-charcoal); clip-path: inset(0 0 100% 0); transition: clip-path .8s var(--ease-io); visibility: hidden; }
+  :global(.menu-open) .menu { clip-path: inset(0); visibility: visible; }
+  .menu__in { height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: calc(var(--header-h) + 4vh) 0 5vh; }
+  .menu__links { list-style: none; margin: 0; padding: 0; }
+  .menu__links a { display: flex; align-items: baseline; gap: var(--s-4); padding: .2em 0; text-decoration: none; font: 800 clamp(2.4rem, 11vw, 5rem)/1 var(--f-display); font-variation-settings: 'wdth' 110; letter-spacing: -.03em; border-bottom: var(--line); }
+  .menu__links small { font: 500 var(--t-xs) var(--f-mono); color: var(--c-weld); }
+  .menu__foot { display: grid; gap: var(--s-6); }
+  .menu__social { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: var(--s-6); }
+  .menu__social a { display: flex; align-items: center; gap: 8px; color: var(--c-steel-dim); text-decoration: none; }
+
+  @media (max-width: 1180px) { .hdr__social { display: none; } }
+  @media (max-width: 900px) {
+    .hdr__nav { display: none; }
+    .hdr__burger { display: block; }
+    .hdr__tools { margin-left: auto; }
+    .sound__lbl { display: none; }
+  }
+  @media (max-width: 480px) { .hdr__cta { display: none; } .hdr__name small { display: none; } }
+</style>

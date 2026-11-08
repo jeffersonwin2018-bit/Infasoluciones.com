@@ -1,0 +1,41 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Hero from '@/components/sections/Hero.astro';
+import Clientes from '@/components/sections/Clientes.astro';
+import Intro from '@/components/sections/Intro.astro';
+import ObrasDestacadas from '@/components/sections/ObrasDestacadas.astro';
+import Servicios from '@/components/sections/Servicios.astro';
+import Recientes from '@/components/sections/Recientes.astro';
+import Proceso from '@/components/sections/Proceso.astro';
+import Taller from '@/components/sections/Taller.astro';
+import Cotizador from '@/components/sections/Cotizador.astro';
+import FAQ from '@/components/sections/FAQ.astro';
+import CTAFinal from '@/components/sections/CTAFinal.astro';
+import { FAQS } from '@/data/content';
+import { faqSchema } from '@/lib/schema';
+import { publicWorks } from '@/lib/server/content';
+
+const sec = Astro.locals.settings.design.sections;
+const works = await publicWorks();
+let featured = works.filter((w) => w.featured).slice(0, 12);
+if (featured.length < 4) featured = works.slice(0, 8);
+const recientes = [...works].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 6);
+---
+<BaseLayout
+  title="INFA | Módulos de exhibición, muebles a medida y metalmecánica en Perú"
+  description="INFA (Mueblerías INFA) diseña, fabrica e instala módulos de exhibición para tiendas, muebles de melamina, carpintería y estructuras metálicas en Lima, Arequipa y todo el Perú. Cotiza por WhatsApp."
+  schemas={[faqSchema(FAQS)]}
+  preload="/media/hero/poster.webp"
+>
+  <Hero />
+  {sec.clientes && <Clientes />}
+  <Intro />
+  {sec.obras && <ObrasDestacadas works={featured} total={works.length} />}
+  {sec.servicios && <Servicios />}
+  {sec.recientes && <Recientes works={recientes} />}
+  {sec.proceso && <Proceso />}
+  <Taller />
+  {sec.cotizador && <Cotizador />}
+  {sec.faq && <FAQ />}
+  <CTAFinal />
+</BaseLayout>

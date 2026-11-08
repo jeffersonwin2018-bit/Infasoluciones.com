@@ -1,0 +1,35 @@
+---
+interface Props { tag: string; title: string; lead?: string; crumbs?: { name: string; path: string }[]; image?: string; imageAi?: boolean }
+const { tag, title, lead, crumbs = [], image, imageAi = false } = Astro.props;
+---
+<section class:list={['ph', { 'ph--img': image }]}>
+  {image && (
+    <div class="ph__bg px" aria-hidden="true">
+      <img src={image} alt="" width="1800" height="1200" fetchpriority="high" decoding="async" />
+      {imageAi && <span class="badge-ai">Imagen referencial</span>}
+    </div>
+  )}
+  <div class="shell ph__in">
+    {crumbs.length > 0 && (
+      <nav aria-label="Migas de pan" class="ph__crumbs">
+        {crumbs.map((c, i) => i < crumbs.length - 1 ? <><a href={c.path}>{c.name}</a> / </> : <span aria-current="page">{c.name}</span>)}
+      </nav>
+    )}
+    <p class="tag tag--dot">{tag}</p>
+    <h1 data-split>{title}</h1>
+    {lead && <p class="ph__lead" data-reveal>{lead}</p>}
+    <slot />
+  </div>
+</section>
+<style>
+  .ph { position: relative; padding: calc(var(--header-h) + clamp(3rem, 10vh, 8rem)) 0 clamp(3rem, 8vh, 6rem); overflow: hidden; isolation: isolate; }
+  .ph--img { min-height: 82svh; display: flex; align-items: flex-end; }
+  .ph__bg { position: absolute; inset: 0; z-index: -1; }
+  .ph__bg img { position: absolute; inset: -9% 0; height: 118%; }
+  .ph__bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(0deg, var(--c-charcoal) 4%, rgb(11 12 16 / .6) 55%, rgb(11 12 16 / .75)); }
+  .ph__bg .badge-ai { left: auto; right: var(--gutter); bottom: 20px; }
+  .ph h1 { font-size: clamp(2.4rem, 1rem + 5.4vw, 6.4rem); max-width: 16ch; margin-top: var(--s-6); }
+  .ph__lead { color: #c9cfd9; font-size: var(--t-md); max-width: 56ch; }
+  .ph__crumbs { font: 500 var(--t-xs) var(--f-mono); color: var(--c-steel-dim); margin-bottom: var(--s-6); }
+  .ph__crumbs a { color: var(--c-steel-dim); }
+</style>

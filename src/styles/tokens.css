@@ -1,0 +1,41 @@
+/* ── INFA · Design tokens ─────────────────────────────────────────────── */
+:root {
+  --c-charcoal: #0b0c10;   /* fondo base */
+  --c-charcoal-2: #13151b; /* superficies */
+  --c-charcoal-3: #23262f; /* bordes */
+  --c-steel: #eef1f5;      /* texto principal */
+  --c-steel-dim: #9aa2b1;  /* texto secundario (AA sobre charcoal) */
+  --c-bone: #efece6;       /* secciones claras */
+  --c-ink: #121318;        /* texto sobre claro */
+  --c-navy: #13294b;       /* azul del logo */
+  --c-weld: #e8293a;       /* ACENTO (editable desde /admin → Diseño) */
+  --c-weld-hot: color-mix(in oklab, var(--c-weld) 80%, white);
+  --c-bronze: #c08a4a;     /* madera */
+  --c-ok: #3ddc84;
+  --c-wa: #25d366;
+
+  --f-display: 'Archivo Variable', 'Archivo', system-ui, sans-serif;
+  --f-body: 'Archivo Variable', system-ui, sans-serif;
+  --f-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  --t-xs: clamp(0.72rem, 0.7rem + 0.1vw, 0.78rem);
+  --t-sm: clamp(0.86rem, 0.83rem + 0.15vw, 0.95rem);
+  --t-md: clamp(1rem, 0.96rem + 0.2vw, 1.12rem);
+  --t-lg: clamp(1.3rem, 1.1rem + 0.9vw, 1.9rem);
+  --t-xl: clamp(2.1rem, 1.3rem + 3.4vw, 4.4rem);
+  --t-hero: clamp(2.7rem, 1rem + 7vw, 8.4rem);
+  --t-mega: clamp(4rem, 1rem + 15vw, 18rem);
+
+  --s-1: 0.25rem; --s-2: 0.5rem; --s-3: 0.75rem; --s-4: 1rem; --s-6: 1.5rem;
+  --s-8: 2rem; --s-12: 3rem; --s-16: 4rem; --s-24: 6rem;
+  --section-y: clamp(5rem, 3rem + 8vw, 10rem);
+  --gutter: clamp(1rem, 4vw, 3rem);
+  --shell: min(1400px, 100% - 2 * var(--gutter));
+  --radius: 4px;
+  --radius-lg: 18px;
+  --line: 1px solid var(--c-charcoal-3);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-io: cubic-bezier(0.76, 0, 0.24, 1);
+  --header-h: 76px;
+}

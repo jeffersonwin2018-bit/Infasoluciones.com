@@ -1,0 +1,12 @@
+---
+/** Logotipo vectorial ligero de INFA (IN / FA apilado, colores del logo original). */
+interface Props { size?: number; mono?: boolean }
+const { size = 44, mono = false } = Astro.props;
+---
+<svg class="logo" width={size} height={size} viewBox="0 0 48 48" role="img" aria-label="INFA">
+  <rect width="48" height="48" rx="10" fill={mono ? 'currentColor' : '#fff'} fill-opacity={mono ? 0.08 : 1} />
+  <g font-family="Archivo Variable, Arial Black, Arial, sans-serif" font-weight="900" font-size="20" letter-spacing="-1">
+    <text x="7" y="22" fill={mono ? 'currentColor' : '#13294b'}>IN</text>
+    <text x="7" y="40" fill="var(--c-weld, #e8293a)">FA</text>
+  </g>
+</svg>

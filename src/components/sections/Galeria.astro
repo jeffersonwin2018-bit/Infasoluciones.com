@@ -1,0 +1,59 @@
+---
+/** Galería completa de obras (masonry) con filtros por categoría y visor. Datos desde /admin. */
+import type { Work } from '@/data/works';
+import { WORK_CATEGORIES } from '@/data/works';
+import { fecha } from '@/lib/format';
+interface Props { works: Work[] }
+const { works } = Astro.props;
+const cats = Object.entries(WORK_CATEGORIES).filter(([k]) => works.some((w) => w.category === k));
+---
+<section class="gal" aria-label="Galería de obras">
+  <div class="shell">
+    <div class="gal__filters" role="group" aria-label="Filtrar por tipo de trabajo">
+      <button type="button" aria-pressed="true" data-f="all">Todas <sup>{works.length}</sup></button>
+      {cats.map(([k, c]) => <button type="button" aria-pressed="false" data-f={k}>{c.label} <sup>{works.filter((w) => w.category === k).length}</sup></button>)}
+    </div>
+    <ul class="gal__grid" data-lb-group="galeria">
+      {works.map((w, i) => (
+        <li data-cat={w.category} data-reveal style={`--d:${(i % 3) * 0.06}s`}>
+          <button type="button" class="gal__item" data-cursor="Ver" data-lb data-src={w.src} data-title={w.title} data-meta={`${WORK_CATEGORIES[w.category]?.label}${w.location ? ' · ' + w.location : ''} · ${fecha(w.date)}`}>
+            <img src={w.thumb} alt={`${w.title}${w.location ? ' — ' + w.location : ''}`} width={w.w} height={w.h} loading={i < 6 ? 'eager' : 'lazy'} decoding="async" />
+            <span class="gal__cap">
+              <strong>{w.title}</strong>
+              <span>{w.location || WORK_CATEGORIES[w.category]?.label} · {fecha(w.date)}</span>
+            </span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
+<script>
+  import '@/scripts/lightbox';
+  import { ScrollTrigger } from '@/scripts/motion';
+  const bs = document.querySelectorAll<HTMLButtonElement>('[data-f]');
+  bs.forEach((b) => b.addEventListener('click', () => {
+    bs.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    document.querySelectorAll<HTMLElement>('.gal__grid > li').forEach((li) => {
+      li.hidden = b.dataset.f !== 'all' && li.dataset.cat !== b.dataset.f;
+      li.classList.add('is-in');
+    });
+    ScrollTrigger.refresh();
+  }));
+</script>
+<style>
+  .gal { padding-bottom: var(--section-y); }
+  .gal__filters { position: sticky; top: calc(var(--header-h) + 8px); z-index: 5; display: flex; gap: var(--s-2); overflow-x: auto; padding: 8px; margin: 0 0 var(--s-8); border-radius: 99px; background: rgb(19 21 27 / .8); backdrop-filter: blur(14px); border: var(--line); width: fit-content; max-width: 100%; scrollbar-width: none; }
+  .gal__filters button { flex: none; padding: 10px 16px; border: 0; border-radius: 99px; background: none; color: var(--c-steel-dim); font: 600 var(--t-sm) var(--f-body); cursor: pointer; transition: background .3s, color .3s; }
+  .gal__filters button sup { font: 500 .65rem var(--f-mono); opacity: .7; }
+  .gal__filters button[aria-pressed='true'] { background: var(--c-weld); color: #fff; }
+  .gal__grid { list-style: none; margin: 0; padding: 0; columns: 3 320px; column-gap: clamp(.8rem, 1.6vw, 1.4rem); }
+  .gal__grid li { break-inside: avoid; margin-bottom: clamp(.8rem, 1.6vw, 1.4rem); }
+  .gal__item { position: relative; display: block; width: 100%; padding: 0; border: 0; border-radius: 14px; overflow: hidden; background: var(--c-charcoal-2); cursor: pointer; color: #fff; text-align: left; }
+  .gal__item img { width: 100%; height: auto; transition: transform 1s var(--ease-out); }
+  .gal__item:hover img { transform: scale(1.05); }
+  .gal__cap { position: absolute; inset: auto 0 0; display: grid; gap: 2px; padding: 40px 16px 14px; background: linear-gradient(0deg, rgb(0 0 0 / .85), transparent); font-size: var(--t-sm); transform: translateY(30%); opacity: 0; transition: .5s var(--ease-out); }
+  .gal__cap span { font: 500 .7rem var(--f-mono); letter-spacing: .06em; color: #c5ccd6; }
+  .gal__item:hover .gal__cap, .gal__item:focus-visible .gal__cap { transform: none; opacity: 1; }
+  @media (hover: none) { .gal__cap { transform: none; opacity: 1; } }
+</style>

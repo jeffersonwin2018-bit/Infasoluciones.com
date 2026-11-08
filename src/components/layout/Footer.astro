@@ -1,0 +1,83 @@
+---
+import { SITE, NAV, SOCIALS } from '@/config/site';
+import { SERVICES, shortTitle } from '@/data/services';
+import { COBERTURA } from '@/data/content';
+import { waLink } from '@/lib/whatsapp';
+import Logo from '@/components/ui/Logo.astro';
+import Icon from '@/components/ui/Icon.astro';
+const year = new Date().getFullYear();
+---
+<footer class="ftr">
+  <div class="shell">
+    <div class="ftr__top">
+      <div class="ftr__lead">
+        <p class="tag tag--dot">Hablemos de tu proyecto</p>
+        <a class="ftr__big" href={waLink()} target="_blank" rel="noopener">{SITE.phoneDisplay}<Icon name="arrow" size={44} /></a>
+      </div>
+      <ul class="ftr__social">
+        {SOCIALS.map((s) => (
+          <li><a href={s.href} target="_blank" rel="noopener" class={`soc soc--${s.key}`}><Icon name={s.key as any} size={22} /><span>{s.label}</span></a></li>
+        ))}
+      </ul>
+    </div>
+
+    <div class="ftr__grid">
+      <div>
+        <a href="/" class="ftr__brand" aria-label="Inicio"><Logo size={52} /></a>
+        <p class="muted">{SITE.tagline}.</p>
+        <address class="ftr__nap">
+          <strong>{SITE.brand}</strong> · {SITE.legalName}{SITE.ruc && <> · RUC {SITE.ruc}</>}<br />
+          {SITE.address.streetAddress && <>{SITE.address.streetAddress}, </>}{SITE.address.addressLocality}, {SITE.address.addressRegion} · Arequipa · Perú<br />
+          <a href={`tel:+${SITE.whatsapp}`}>{SITE.phoneDisplay}</a>{SITE.email && <> · <a href={`mailto:${SITE.email}`}>{SITE.email}</a></>}
+        </address>
+      </div>
+      <nav aria-label="Servicios">
+        <p class="tag">Servicios</p>
+        <ul>{SERVICES.map((s) => <li><a href={`/servicios/${s.slug}`}>{shortTitle(s)}</a></li>)}</ul>
+      </nav>
+      <nav aria-label="Cobertura">
+        <p class="tag">Cobertura</p>
+        <ul>{COBERTURA.map((c) => <li><a href={`/cobertura/${c.slug}`}>{c.nombre}</a></li>)}</ul>
+      </nav>
+      <nav aria-label="Empresa">
+        <p class="tag">Empresa</p>
+        <ul>
+          <li><a href="/">Inicio</a></li>
+          {NAV.map((n) => <li><a href={n.href}>{n.label}</a></li>)}
+          <li><a href="/cotizar">Cotizar</a></li>
+          <li><a href="/admin" rel="nofollow">Acceso equipo</a></li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+  <div class="ftr__word" aria-hidden="true">INFA</div>
+  <div class="shell ftr__base">
+    <span>© {year} {SITE.brand} · {SITE.legalName}</span>
+    <span><a href="/privacidad">Privacidad</a> · Hecho en Perú</span>
+  </div>
+</footer>
+
+<style>
+  .ftr { position: relative; overflow: hidden; padding-top: var(--section-y); background: #07080b; font-size: var(--t-sm); border-top: 1px solid rgb(255 255 255 / .06); }
+  .ftr__top { display: flex; justify-content: space-between; align-items: end; gap: var(--s-8); flex-wrap: wrap; padding-bottom: var(--s-16); border-bottom: var(--line); }
+  .ftr__big { display: inline-flex; align-items: center; gap: .3em; margin-top: var(--s-4); font: 800 clamp(2rem, 6vw, 5.4rem)/1 var(--f-display); font-variation-settings: 'wdth' 110; letter-spacing: -.03em; text-decoration: none; transition: color .3s; }
+  .ftr__big:hover { color: var(--c-wa); }
+  .ftr__big svg { width: .7em; height: .7em; transition: transform .4s var(--ease-out); }
+  .ftr__big:hover svg { transform: translate(6px, -6px); }
+  .ftr__social { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--s-2); }
+  .soc { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 99px; border: 1px solid rgb(255 255 255 / .14); text-decoration: none; font-weight: 600; transition: background .3s, border-color .3s, color .3s; }
+  .soc--whatsapp:hover { background: #25d366; border-color: #25d366; color: #05290f; }
+  .soc--facebook:hover { background: #1877f2; border-color: #1877f2; }
+  .soc--instagram:hover { background: linear-gradient(45deg, #f58529, #dd2a7b, #8134af); border-color: transparent; }
+  .soc--tiktok:hover { background: #fff; color: #000; }
+  .ftr__grid { display: grid; grid-template-columns: 1.6fr repeat(3, 1fr); gap: var(--s-12); padding-block: var(--s-16); }
+  .ftr__brand { display: inline-block; margin-bottom: var(--s-4); }
+  .ftr__nap { font-style: normal; color: var(--c-steel-dim); line-height: 1.8; }
+  .ftr ul:not(.ftr__social) { list-style: none; padding: 0; margin: var(--s-4) 0 0; display: grid; gap: var(--s-2); }
+  .ftr a { color: var(--c-steel-dim); text-decoration: none; }
+  .ftr a:hover, .ftr__big, .soc { color: var(--c-steel); }
+  .ftr__word { font: 900 var(--t-mega)/0.78 var(--f-display); font-variation-settings: 'wdth' 125; letter-spacing: -.05em; text-align: center; color: transparent; -webkit-text-stroke: 1px rgb(255 255 255 / .12); user-select: none; margin-bottom: -0.06em; }
+  .ftr__base { display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--s-4); padding-block: var(--s-6); border-top: var(--line); color: var(--c-steel-dim); font: 500 var(--t-xs) var(--f-mono); }
+  @media (max-width: 900px) { .ftr__grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .ftr__grid { grid-template-columns: 1fr; } }
+</style>

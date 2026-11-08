@@ -1,0 +1,25 @@
+---
+const s = Astro.locals.settings;
+---
+<section class="tal" aria-labelledby="tal-title">
+  <div class="tal__bg px">
+    <img src="/media/ia/taller.webp" alt="Taller de carpintería y metalmecánica con maquinaria de corte y soldadura" width="1800" height="1012" loading="lazy" decoding="async" />
+  </div>
+  <div class="shell tal__in">
+    <p class="tag tag--dot">Taller propio</p>
+    <h2 id="tal-title" data-split>{s.about.title}</h2>
+    <p class="tal__p" data-reveal>{s.about.body}</p>
+    <a class="btn" href="/nosotros" data-reveal>Conoce a la familia INFA</a>
+  </div>
+  <span class="badge-ai tal__ai">Imagen referencial</span>
+</section>
+<style>
+  .tal { position: relative; min-height: 100svh; display: flex; align-items: flex-end; overflow: hidden; isolation: isolate; padding-block: var(--section-y); }
+  .tal__bg { position: absolute; inset: 0; z-index: -1; }
+  .tal__bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(0deg, rgb(5 5 7 / .95) 10%, rgb(5 5 7 / .35) 60%, rgb(5 5 7 / .55)); }
+  .tal__bg img { position: absolute; inset: -9% 0; height: 118%; }
+  .tal__in h2 { max-width: 14ch; margin-top: var(--s-4); }
+  .tal__p { max-width: 52ch; color: #d3d8e0; font-size: var(--t-md); }
+  .tal__in .btn { margin-top: var(--s-6); }
+  .tal__ai { left: auto; right: var(--gutter); bottom: var(--s-6); }
+</style>
