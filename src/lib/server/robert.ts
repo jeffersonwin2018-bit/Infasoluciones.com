@@ -11,7 +11,9 @@ import { WORK_CATEGORIES } from '@/data/works';
 import { getSettings, publicWorks } from './content';
 
 const API = 'https://generativelanguage.googleapis.com/v1beta/models';
-const MODELS = [process.env.GEMINI_MODEL, 'gemini-flash-latest', 'gemini-2.5-flash'].filter(Boolean) as string[];
+// Si un modelo está saturado (503/429/500) o no existe, se prueba el siguiente automáticamente.
+const MODELS = [...new Set([process.env.GEMINI_MODEL, 'gemini-flash-latest', 'gemini-2.5-flash', 'gemini-flash-lite-latest', 'gemini-2.5-flash-lite'].filter(Boolean) as string[])];
+const RETRY = new Set([400, 404, 408, 429, 500, 502, 503, 504]);
 const key = () => process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
 export const robertReady = () => !!key();
 
@@ -131,14 +133,24 @@ export async function streamGemini(messages: ChatMsg[], signal?: AbortSignal) {
   });
   let last = '';
   for (const model of MODELS) {
-    const r = await fetch(`${API}/${model}:streamGenerateContent?alt=sse`, {
-      method: 'POST', signal,
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key() },
-      body,
-    });
+    // Si el modelo no empieza a responder en 8 s, se corta y se prueba el siguiente.
+    // (El límite solo cubre la espera inicial; la respuesta en streaming puede durar lo que necesite.)
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    signal?.addEventListener('abort', () => ctrl.abort(), { once: true });
+    let r: Response;
+    try {
+      r = await fetch(`${API}/${model}:streamGenerateContent?alt=sse`, {
+        method: 'POST', signal: ctrl.signal,
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key() },
+        body,
+      });
+    } catch (e: any) { clearTimeout(timer); last = `${model}: ${e?.name ?? e}`; if (signal?.aborted) break; continue; }
+    clearTimeout(timer);
     if (r.ok && r.body) return r.body;
     last = `${model}: ${r.status} ${(await r.text()).slice(0, 300)}`;
-    if (r.status !== 404 && r.status !== 400) break; // 401/403/429: no tiene sentido probar otro modelo
+    console.warn('[Robert] modelo falló, probando el siguiente →', last.slice(0, 120));
+    if (!RETRY.has(r.status)) break; // 401/403: clave inválida, no sirve probar otro
   }
   throw new Error(last);
 }
@@ -150,12 +162,15 @@ Si es una canción o artista: el video oficial o "official audio". Si es un gén
 Responde SOLO con hasta 4 enlaces https://www.youtube.com/watch?v=... (uno por línea), del más adecuado al menos.`;
   let text = '';
   for (const model of MODELS) {
-    const r = await fetch(`${API}/${model}:generateContent`, {
-      method: 'POST',
+    let r: Response;
+    try {
+      r = await fetch(`${API}/${model}:generateContent`, {
+      method: 'POST', signal: AbortSignal.timeout(12000),
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key() },
       body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], tools: [{ google_search: {} }], generationConfig: { temperature: 0.2 } }),
-    });
-    if (!r.ok) { if (r.status === 404 || r.status === 400) continue; return null; }
+      });
+    } catch { continue; }
+    if (!r.ok) { if (RETRY.has(r.status)) continue; return null; }
     const j = await r.json();
     text = JSON.stringify(j); // incluye texto y metadatos de búsqueda
     break;

@@ -9,7 +9,7 @@ export default defineConfig({
   site: 'https://www.infasoluciones.com',
   trailingSlash: 'never',
   output: 'server',
-  adapter: vercel({ maxDuration: 30 }),
+  adapter: vercel({ maxDuration: 60 }),
   prefetch: { prefetchAll: false, defaultStrategy: 'hover' },
   security: { checkOrigin: false }, // el API valida el origen por su cuenta (src/pages/api)
 });
